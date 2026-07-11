@@ -12,23 +12,47 @@
         body {
             margin: 0;
             padding: 0;
-            background: #1a1a1a;
+            background: #1e1e24;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             overflow: hidden;
         }
+        
+        /* Main Game Screen Window */
         #game-container {
             width: 900px;
-            height: 550px;
+            height: 520px;
             background: linear-gradient(to bottom, #bae6fd, #e0f2fe);
             position: relative;
             overflow: hidden;
             border: 6px solid #334155;
-            border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        
+        /* Clean Cartoon Landscape Hills (No random grass lines) */
+        #sky-hills {
+            position: absolute;
+            bottom: 110px;
+            width: 100%;
+            height: 60px;
+            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 60'><path d='M0 40 Q 250 10 450 35 T 900 20 L 900 60 L 0 60 Z' fill='%2322c55e' opacity='0.5'/></svg>");
+            background-size: cover;
+            z-index: 1;
+        }
+
+        #ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 120px;
+            background: #4ade80;
+            border-top: 8px solid #16a34a;
+            z-index: 2;
         }
         
         /* Smooth Cartoon Clouds */
@@ -38,60 +62,30 @@
             border-radius: 50px;
             opacity: 0.9;
             animation: drift linear infinite;
+            z-index: 1;
         }
-        .cloud::before, .cloud::after {
-            content: '';
-            position: absolute;
-            background: #ffffff;
-            border-radius: 50%;
-        }
-        .cloud-1 { width: 140px; height: 45px; top: 50px; left: -200px; animation-duration: 40s; }
-        .cloud-2 { width: 200px; height: 60px; top: 100px; left: -250px; animation-duration: 60s; }
+        .cloud-1 { width: 140px; height: 45px; top: 40px; left: -200px; animation-duration: 45s; }
+        .cloud-2 { width: 190px; height: 55px; top: 90px; left: -250px; animation-duration: 65s; }
         @keyframes drift {
             0% { transform: translateX(0); }
             100% { transform: translateX(1200px); }
         }
 
-        /* Ground */
-        #ground {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 120px;
-            background: #4ade80;
-            border-top: 8px solid #22c55e;
-            z-index: 2;
-        }
-        .grass-tuft {
-            position: absolute;
-            bottom: 114px;
-            width: 8px;
-            height: 22px;
-            background: #16a34a;
-            border-radius: 4px;
-            transform-origin: bottom center;
-            animation: sway 3s ease-in-out infinite alternate;
-            z-index: 2;
-        }
-        @keyframes sway {
-            0% { transform: skewX(-6deg); }
-            100% { transform: skewX(10deg); }
-        }
-
         /* Adopt Me Style Dino Character */
         #dino {
             position: absolute;
-            width: 140px;
-            height: 140px;
-            bottom: 95px;
+            width: 135px;
+            height: 135px;
+            bottom: 90px;
             left: 380px;
             cursor: grab;
             z-index: 10;
             transform-origin: bottom center;
+            display: none; /* Managed via JS */
         }
-        #dino.idle { animation: dino-plush-breathe 2s ease-in-out infinite; }
-        #dino.walking { animation: dino-plush-bounce 0.5s infinite ease-in-out; }
-        #dino.dragging { cursor: grabbing; animation: dino-plush-panic 0.15s infinite alternate ease-in-out; }
+        #dino.idle { animation: plush-breathe 2s ease-in-out infinite; }
+        #dino.walking { animation: plush-bounce 0.5s infinite ease-in-out; }
+        #dino.dragging { cursor: grabbing; animation: plush-panic 0.15s infinite alternate ease-in-out; }
         
         .dino-sprite {
             width: 100%;
@@ -101,32 +95,29 @@
             background-position: bottom center;
         }
 
-        /* Cartoon Soft Squash/Stretch Animations */
-        @keyframes dino-plush-breathe {
+        @keyframes plush-breathe {
             0%, 100% { transform: scale(1, 1); }
             50% { transform: scale(1.04, 0.96); }
         }
-        @keyframes dino-plush-bounce {
-            0%, 100% { transform: translateY(0) scale(1, 1) rotate(0deg); }
-            50% { transform: translateY(-14px) scale(0.96, 1.05) rotate(2deg); }
+        @keyframes plush-bounce {
+            0%, 100% { transform: translateY(0) scale(1, 1); }
+            50% { transform: translateY(-12px) scale(0.95, 1.05); }
         }
-        @keyframes dino-plush-panic {
-            0% { transform: scale(0.95) rotate(-4deg); }
-            100% { transform: scale(1.05) rotate(4deg); }
+        @keyframes plush-panic {
+            0% { transform: scale(0.95) rotate(-3deg); }
+            100% { transform: scale(1.05) rotate(3deg); }
         }
 
-        /* Custom Habitat Drag Items */
+        /* Draggable Decor Items */
         .placed-item {
             position: absolute;
-            bottom: 105px;
+            bottom: 100px;
             font-size: 42px;
             z-index: 5;
             cursor: move;
-            filter: drop-shadow(0 6px 6px rgba(0,0,0,0.1));
-            transition: transform 0.1s;
+            filter: drop-shadow(0 6px 6px rgba(0,0,0,0.15));
         }
-        .placed-item:hover { transform: scale(1.2); }
-        .placed-item.dragging-item { opacity: 0.7; transform: scale(1.3); }
+        .placed-item.dragging-item { opacity: 0.7; transform: scale(1.2); }
 
         /* Speech Bubble */
         #speech-bubble {
@@ -141,29 +132,51 @@
             max-width: 220px;
             display: none;
             z-index: 40;
-            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15));
-        }
-        #speech-bubble::after {
-            content: '';
-            position: absolute;
-            bottom: -12px;
-            left: 30px;
-            border-width: 12px 12px 0;
-            border-style: solid;
-            border-color: white transparent;
-            display: block;
-            width: 0;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
         }
 
-        /* UI Screens */
+        /* Control Panel Menu Dock at Bottom */
+        #control-dock {
+            width: 900px;
+            background: #1e293b;
+            border: 4px solid #334155;
+            border-top: none;
+            border-radius: 0 0 16px 16px;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+        .dock-group { display: flex; align-items: center; gap: 12px; }
+        .dock-label { font-size: 12px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
+        
+        button {
+            background: #334155;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            border-bottom: 3px solid #1e293b;
+            transition: all 0.1s;
+        }
+        button:active { transform: translateY(2px); border-bottom-width: 1px; }
+        button.success { background: #22c55e; border-bottom-color: #16a34a; }
+        button.danger { background: #ef4444; border-bottom-color: #b91c1c; }
+
+        /* Setup Screen Overlay */
         .ui-screen {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 23, 42, 0.85);
-            display: none;
+            background: #111827;
+            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -172,104 +185,35 @@
         }
         .menu-box {
             background: #1e293b;
-            border: 4px solid #f8fafc;
-            padding: 35px;
-            border-radius: 20px;
+            border: 4px solid #475569;
+            padding: 40px;
+            border-radius: 24px;
             text-align: center;
-            max-width: 450px;
+            width: 460px;
         }
         input[type="text"] {
             padding: 12px;
             font-size: 16px;
-            border: 2px solid #cbd5e1;
+            border: 2px solid #475569;
             border-radius: 8px;
-            background: #334155;
+            background: #0f172a;
             color: white;
             margin-bottom: 20px;
             width: 100%;
             text-align: center;
         }
-        button {
-            background: #22c55e;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            border-bottom: 4px solid #16a34a;
-        }
-        button:active {
-            border-bottom: 0;
-            transform: translateY(4px);
-        }
         .dino-choice {
             display: inline-block;
-            margin: 10px;
-            padding: 15px;
-            border: 3px dashed #64748b;
+            margin: 8px;
+            padding: 14px;
+            border: 3px dashed #475569;
             border-radius: 12px;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 16px;
         }
         .dino-choice.selected {
             border-color: #22c55e;
-            background: #334155;
-            transform: scale(1.05);
-        }
-
-        /* HUD Panels */
-        #stats-panel {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: rgba(15, 23, 42, 0.75);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 30px;
-            font-size: 15px;
-            font-weight: 600;
-            border: 1px solid #475569;
-            z-index: 30;
-            backdrop-filter: blur(4px);
-        }
-        #reset-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: #ef4444;
-            border-bottom: 3px solid #b91c1c;
-            font-size: 12px;
-            padding: 8px 14px;
-            z-index: 30;
-        }
-        #shop-panel {
-            position: absolute;
-            bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.9);
-            padding: 12px 25px;
-            border-radius: 16px;
-            border: 2px solid #64748b;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            z-index: 30;
-        }
-        .shop-title {
-            color: #94a3b8;
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .shop-btn {
-            background: #334155;
-            border-bottom: 3px solid #1e293b;
-            font-size: 13px;
-            padding: 8px 14px;
+            background: #0f172a;
         }
     </style>
 </head>
@@ -278,6 +222,7 @@
 <div id="game-container">
     <div class="cloud cloud-1"></div>
     <div class="cloud cloud-2"></div>
+    <div id="sky-hills"></div>
     <div id="ground"></div>
     <div id="speech-bubble"></div>
 
@@ -285,42 +230,43 @@
         <div class="dino-sprite" id="dino-render"></div>
     </div>
 
-    <div id="stats-panel" style="display:none;">
-        ✨ <span id="display-name">Dino</span> the <span id="display-type">Type</span> | Stage: <span id="display-age">Baby</span>
-    </div>
-    <button id="reset-btn" style="display:none;" onclick="resetGame()">Reset Pet</button>
-    
-    <div id="shop-panel" style="display:none;">
-        <div class="shop-title">Habitat Items:</div>
-        <button class="shop-btn" onclick="spawnItem('🌸')">🌸 Flower</button>
-        <button class="shop-btn" onclick="spawnItem('🔥')">🔥 Fire Pit</button>
-        <button class="shop-btn" onclick="spawnItem('🌳')">🌳 Tree</button>
-    </div>
-
     <div id="setup-screen" class="ui-screen">
         <div class="menu-box">
-            <h2>Hatch a Dino Partner</h2>
-            <p>Choose a companion species:</p>
+            <h2 style="margin-top:0; font-size:26px;">Hatch Your Pet Dino</h2>
+            <p style="color:#94a3b8;">Pick your starter buddy companion:</p>
             <div>
                 <div class="dino-choice selected" onclick="selectType('T-Rex', this)">🦖 T-Rex</div>
-                <div class="dino-choice" onclick="selectType('Brachiosaurus', this)">🦕 Brach</div>
-                <div class="dino-choice" onclick="selectType('Triceratops', this)">🛡️ Triceratops</div>
+                <div class="dino-choice" onclick="selectType('Brachiosaurus', this)">流 Brach</div>
+                <div class="dino-choice" onclick="selectType('Triceratops', this)">🛡️ Tri</div>
             </div>
-            <p>Name your dinosaur:</p>
-            <input type="text" id="dino-name-input" value="Little Foot" maxlength="12">
-            <button onclick="startGame()">HATCH EGG</button>
+            <p style="color:#94a3b8; margin-top:20px;">Name your pet:</p>
+            <input type="text" id="dino-name-input" value="Nugget" maxlength="12">
+            <button class="success" style="width:100%; padding:14px;" onclick="startGame()">HATCH PET EGG</button>
         </div>
     </div>
 </div>
 
+<div id="control-dock">
+    <div class="dock-group">
+        <span class="dock-label">Pet:</span>
+        <strong id="lbl-name" style="color:#38bdf8;">---</strong> 
+        <span id="lbl-meta" style="color:#94a3b8; font-size:13px;">(Baby)</span>
+    </div>
+    
+    <div class="dock-group">
+        <span class="dock-label">Habitat Customization Dock:</span>
+        <button onclick="spawnItem('🌸')">🌸 Flower</button>
+        <button onclick="spawnItem('🔥')">🔥 Fire Pit</button>
+        <button onclick="spawnItem('🌳')">🌳 Tree</button>
+    </div>
+
+    <div class="dock-group">
+        <button class="danger" onclick="resetGame()">Reset Game</button>
+    </div>
+</div>
+
 <script>
-    let pet = {
-        name: "",
-        type: "T-Rex",
-        age: "Baby",
-        placedItems: [],
-        lastSaved: Date.now()
-    };
+    let pet = null;
 
     const dinoElement = document.getElementById('dino');
     const dinoRender = document.getElementById('dino-render');
@@ -335,52 +281,270 @@
     let wanderTimeout;
     let bubbleTimeout;
 
-    // Layered Vector Cartoon Sprites (Adopt Me Inspired)
+    // Premium Adopt Me Inspired 2D Character Vector Visual Framework
     const sprites = {
         'T-Rex': `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'>` +
-            // Tail
             `<path d='M35 75 Q 10 70 15 88 Q 30 88 45 82' fill='%234ade80'/>` +
-            // Back Legs & Feet
             `<ellipse cx='48' cy='105' rx='14' ry='10' fill='%2322c55e'/>` +
             `<ellipse cx='76' cy='105' rx='14' ry='10' fill='%2322c55e'/>` +
-            // Body
             `<rect x='40' y='50' width='48' height='50' rx='22' fill='%234ade80'/>` +
-            // Cream Belly Patch
             `<rect x='54' y='56' width='30' height='38' rx='14' fill='%23fef08a'/>` +
-            // Tiny Arms
             `<path d='M82 68 Q 92 70 90 75' stroke='%234ade80' stroke-width='7' stroke-linecap='round' fill='none'/>` +
-            // Head
             `<rect x='52' y='20' width='44' height='40' rx='16' fill='%234ade80'/>` +
-            // Glossy Cartoon Eye
             `<circle cx='78' cy='34' r='7' fill='%231e293b'/>` +
             `<circle cx='80' cy='31' r='2.5' fill='white'/>` +
-            // Cheerful Cheek
             `<circle cx='70' cy='44' r='4' fill='%23f43f5e' opacity='0.4'/>` +
             `</svg>")`,
 
         'Brachiosaurus': `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'>` +
-            // Tail
             `<path d='M35 85 Q 10 82 18 94' stroke='%2338bdf8' stroke-width='14' stroke-linecap='round' fill='none'/>` +
-            // Back Legs
             `<ellipse cx='46' cy='106' rx='14' ry='10' fill='%230284c7'/>` +
             `<ellipse cx='78' cy='106' rx='14' ry='10' fill='%230284c7'/>` +
-            // Body
             `<rect x='36' y='65' width='54' height='42' rx='20' fill='%2338bdf8'/>` +
-            // Spots
-            `<circle cx='48' cy='76' r='4' fill='%0284c7' opacity='0.3'/>` +
-            `<circle cx='58' cy='73' r='5' fill='%0284c7' opacity='0.3'/>` +
-            // Long Curved Neck & Head
+            `<circle cx='48' cy='76' r='4' fill='%230284c7' opacity='0.3'/>` +
+            `<circle cx='58' cy='73' r='5' fill='%230284c7' opacity='0.3'/>` +
             `<path d='M76 80 L 76 36 Q 76 20 88 22' stroke='%2338bdf8' stroke-width='22' stroke-linecap='round' fill='none'/>` +
-            // Head base capsule
             `<circle cx='86' cy='24' r='12' fill='%2338bdf8'/>` +
-            // Glossy Eye
             `<circle cx='88' cy='22' r='3.5' fill='%231e293b'/>` +
-            `<circle cx='89' cy='20' r='1.2' fill='white'/><circle cx='87' cy='23' r='0.6' fill='white'/>` +
+            `<circle cx='89' cy='20' r='1.2' fill='white'/>` +
             `</svg>")`,
 
         'Triceratops': `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'>` +
-            // Tail
             `<path d='M35 80 Q 15 75 22 90' stroke='%23fb923c' stroke-width='10' stroke-linecap='round' fill='none'/>` +
-            // Legs
             `<ellipse cx='48' cy='105' rx='13' ry='9' fill='%23ea580c'/>` +
-            `<ellipse cx='76' cy='105' rx='13' ry='9' fill='%23ea580
+            `<ellipse cx='76' cy='105' rx='13' ry='9' fill='%23ea580c'/>` +
+            `<rect x='38' y='60' width='52' height='44' rx='18' fill='%23fb923c'/>` +
+            `<circle cx='82' cy='52' r='26' fill='%23ea580c'/>` +
+            `<circle cx='82' cy='40' r='3' fill='%23ffedd5'/>` +
+            `<circle cx='94' cy='46' r='3' fill='%23ffedd5'/>` +
+            `<circle cx='76' cy='65' r='18' fill='%23fb923c'/>` +
+            `<polygon points='86,60 98,58 88,68' fill='%23ffedd5'/>` +
+            `<polygon points='78,44 86,34 82,48' fill='%23ffedd5'/>` +
+            `<circle cx='72' cy='60' r='4.5' fill='%231e293b'/>` +
+            `<circle cx='73' cy='58' r='1.5' fill='white'/>` +
+            `</svg>")`
+    };
+
+    const dialogues = {
+        idle: {
+            'T-Rex': ["*Stomps cleanly*", "Look at my happy tail!", "Everything looks so clean here."],
+            'Brachiosaurus': ["*Chews happily*", "The fields are lovely today.", "I love hanging out in the yard."],
+            'Triceratops': ["*Polishes horns*", "Ready for some fun!", "Let's explore around."]
+        },
+        holding: ["Wheee! I can fly!", "Put me down gently!"],
+        dropped: ["Safe landing!", "Let's track down those items!"],
+        items: {
+            '🌸': ["*Sniffs flower* Ah, smells so good!", "What a cute flower patch."],
+            '🔥': ["Ooh, super cozy and warm here.", "*Warms toes near the fire pit*"],
+            '🌳': ["*Rests under tree branches*", "Nice and peaceful shade."]
+        }
+    };
+
+    function selectType(type, element) {
+        chosenType = type;
+        document.querySelectorAll('.dino-choice').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+    }
+
+    function startGame() {
+        pet = {
+            name: document.getElementById('dino-name-input').value.trim() || "Nugget",
+            type: chosenType,
+            age: "Baby",
+            placedItems: []
+        };
+        saveGame();
+        initGame();
+    }
+
+    function initGame() {
+        if(!pet) return;
+        
+        document.getElementById('setup-screen').style.display = 'none';
+        dinoElement.style.display = 'block';
+        
+        // Populate Control Dock Data Live
+        document.getElementById('lbl-name').innerText = pet.name;
+        document.getElementById('lbl-meta').innerText = `(${pet.type} • ${pet.age})`;
+        
+        dinoRender.style.backgroundImage = sprites[pet.type];
+        
+        // Remove older nodes and re-render properly positioned layout assets
+        document.querySelectorAll('.placed-item').forEach(el => el.remove());
+        if(pet.placedItems) {
+            pet.placedItems.forEach((item, index) => renderItem(item.type, item.x, index));
+        }
+
+        startAI();
+    }
+
+    function spawnItem(itemType) {
+        if(!pet) return;
+        if(!pet.placedItems) pet.placedItems = [];
+        
+        let id = pet.placedItems.length;
+        let defaultX = Math.random() * 600 + 100;
+        
+        pet.placedItems.push({ type: itemType, x: defaultX });
+        renderItem(itemType, defaultX, id);
+        saveGame();
+    }
+
+    function renderItem(type, x, id) {
+        let itemDiv = document.createElement('div');
+        itemDiv.className = 'placed-item';
+        itemDiv.dataset.id = id;
+        itemDiv.innerText = type;
+        itemDiv.style.left = x + 'px';
+        
+        itemDiv.addEventListener('mousedown', (e) => {
+            isDraggingItem = true;
+            activeItemElement = itemDiv;
+            itemDiv.classList.add('dragging-item');
+            dragStartX = e.clientX - itemDiv.offsetLeft;
+            e.stopPropagation();
+        });
+
+        container.appendChild(itemDiv);
+    }
+
+    function walkToLocation(targetX, callback) {
+        if (isDraggingDino || !pet) return;
+        
+        dinoElement.className = 'walking';
+        dinoRender.style.transform = (targetX < dinoElement.offsetLeft) ? "scaleX(-1)" : "scaleX(1)";
+
+        let distance = Math.abs(targetX - dinoElement.offsetLeft);
+        let duration = Math.max(distance * 4, 400); 
+        
+        dinoElement.style.transition = `left ${duration}ms linear`;
+        dinoElement.style.left = targetX + 'px';
+
+        setTimeout(() => {
+            if (!isDraggingDino) {
+                dinoElement.className = 'idle';
+                if (callback) callback();
+            }
+        }, duration);
+    }
+
+    function speak(text) {
+        bubble.innerText = text;
+        bubble.style.display = 'block';
+        updateBubblePosition();
+        clearTimeout(bubbleTimeout);
+        bubbleTimeout = setTimeout(() => { bubble.style.display = 'none'; }, 3500);
+    }
+
+    function updateBubblePosition() {
+        bubble.style.left = (dinoElement.offsetLeft + 10) + 'px';
+        bubble.style.top = (dinoElement.offsetTop - 50) + 'px';
+    }
+
+    function startAI() {
+        clearTimeout(wanderTimeout);
+        let decisionLoop = () => {
+            if (isDraggingDino || isDraggingItem || !pet) {
+                wanderTimeout = setTimeout(decisionLoop, 4000);
+                return;
+            }
+
+            let roll = Math.random();
+            if (roll < 0.5 && pet.placedItems && pet.placedItems.length > 0) {
+                let item = pet.placedItems[Math.floor(Math.random() * pet.placedItems.length)];
+                walkToLocation(item.x - 15, () => {
+                    let lines = dialogues.items[item.type];
+                    if(lines) speak(lines[Math.floor(Math.random() * lines.length)]);
+                });
+            } else if (roll < 0.85) {
+                walkToLocation(Math.random() * 730, () => {
+                    if(Math.random() > 0.6) {
+                        let pool = dialogues.idle[pet.type];
+                        speak(pool[Math.floor(Math.random() * pool.length)]);
+                    }
+                });
+            } else {
+                let pool = dialogues.idle[pet.type];
+                speak(pool[Math.floor(Math.random() * pool.length)]);
+            }
+            wanderTimeout = setTimeout(decisionLoop, Math.random() * 5000 + 4000);
+        };
+        wanderTimeout = setTimeout(decisionLoop, 2000);
+    }
+
+    function saveGame() {
+        localStorage.setItem('cute_habitat_v3_save', JSON.stringify(pet));
+    }
+
+    function resetGame() {
+        localStorage.removeItem('cute_habitat_v3_save');
+        location.reload();
+    }
+
+    // Global Event Handlers
+    dinoElement.addEventListener('mousedown', (e) => {
+        if(!pet) return;
+        isDraggingDino = true;
+        dinoElement.className = 'dragging';
+        dinoElement.style.transition = "none";
+        dragStartX = e.clientX - dinoElement.offsetLeft;
+        dragStartY = e.clientY - dinoElement.offsetTop;
+        speak(dialogues.holding[Math.floor(Math.random() * dialogues.holding.length)]);
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        let rect = container.getBoundingClientRect();
+        
+        if (isDraggingDino) {
+            let newX = e.clientX - rect.left - dragStartX;
+            let newY = e.clientY - rect.top - dragStartY;
+            newX = Math.max(0, Math.min(newX, 765));
+            newY = Math.max(0, Math.min(newY, 320));
+            
+            dinoElement.style.left = newX + 'px';
+            dinoElement.style.top = newY + 'px';
+            updateBubblePosition();
+        }
+        
+        if (isDraggingItem && activeItemElement) {
+            let newX = e.clientX - rect.left - dragStartX;
+            newX = Math.max(10, Math.min(newX, 850));
+            activeItemElement.style.left = newX + 'px';
+            
+            let id = activeItemElement.dataset.id;
+            if(pet.placedItems && pet.placedItems[id]) {
+                pet.placedItems[id].x = newX;
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isDraggingDino) {
+            isDraggingDino = false;
+            dinoElement.className = 'idle';
+            dinoElement.style.transition = "top 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)";
+            dinoElement.style.top = "320px";
+            setTimeout(() => { speak(dialogues.dropped[Math.floor(Math.random() * dialogues.dropped.length)]); }, 400);
+            saveGame();
+        }
+        if (isDraggingItem) {
+            isDraggingItem = false;
+            if(activeItemElement) activeItemElement.classList.remove('dragging-item');
+            activeItemElement = null;
+            saveGame();
+        }
+    });
+
+    window.onload = () => {
+        let data = localStorage.getItem('cute_habitat_v3_save');
+        if(data) {
+            pet = JSON.parse(data);
+            initGame();
+        } else {
+            document.getElementById('setup-screen').style.display = 'flex';
+        }
+    };
+</script>
+
+</body>
+</html>
