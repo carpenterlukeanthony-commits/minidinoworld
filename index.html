@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Dino Virtual Pet</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: #111;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #game-container {
+            width: 800px;
+            height: 500px;
+            background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
+            position: relative;
+            overflow: hidden;
+            border: 4px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        /* Clouds */
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 10px;
+            opacity: 0.8;
+            animation: drift linear infinite;
+        }
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+        .cloud-1 { width: 80px; height: 30px; top: 40px; left: -100px; animation-duration: 25s; }
+        .cloud-2 { width: 120px; height: 40px; top: 80px; left: -150px; animation-duration: 40s; }
+        
+        @keyframes drift {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(1000px); }
+        }
+
+        /* Ground */
+        #ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+            background: #4CAF50;
+            border-top: 6px solid #388E3C;
+        }
+        /* Swaying Grass */
+        .grass-tuft {
+            position: absolute;
+            bottom: 95px;
+            width: 4px;
+            height: 15px;
+            background: #2E7D32;
+            transform-origin: bottom center;
+            animation: sway 3s ease-in-out infinite alternate;
+        }
+        @keyframes sway {
+            0% { transform: skewX(-5deg); }
+            100% { transform: skewX(10deg); }
+        }
+
+        /* Dinosaur */
+        #dino {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            bottom: 80px;
+            left: 370px;
+            cursor: grab;
+            transition: transform 0.1s;
+            z-index: 10;
+        }
+        #dino.dragging {
+            cursor: grabbing;
+            transition: none;
+        }
+        .dino-sprite {
+            width: 100%;
+            height: 100%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom center;
+        }
+
+        /* Speech Bubble */
+        #speech-bubble {
+            position: absolute;
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            max-width: 200px;
+            display: none;
+            z-index: 20;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+        }
+        #speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 20px;
+            border-width: 8px 8px 0;
+            border-style: solid;
+            border-color: white transparent;
+            display: block;
+            width: 0;
+        }
+
+        /* UI Overlay Screens */
+        .ui-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: white;
+        }
+        .menu-box {
+            background: #222;
+            border: 4px solid #fff;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 400px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            font-family: monospace;
+            font-size: 16px;
+            border: 2px solid #fff;
+            background: #333;
+            color: white;
+            margin-bottom: 20px;
+            width: 100%;
+            text-align: center;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-family: monospace;
+            font-size: 16px;
+            cursor: pointer;
+            border-bottom: 4px solid #2E7D32;
+        }
+        button:active {
+            border-bottom: 0;
+            margin-top: 4px;
+        }
+        .dino-choice {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px;
+            border: 2px dashed #666;
+            cursor: pointer;
+        }
+        .dino-choice.selected {
+            border-color: #4CAF50;
+            background: #333;
+        }
+
+        /* Stats Panel */
+        #stats-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 10px;
+            border-radius: 50px;
+            font-size: 14px;
+            border: 1px solid #555;
+        }
+        #reset-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #cc3333;
+            border-bottom: 2px solid #990000;
+            font-size: 11px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div id="ground"></div>
+
+    <div id="speech-bubble"></div>
+
+    <div id="dino">
+        <div class="dino-sprite" id="dino-render"></div>
+    </div>
+
+    <div id="stats-panel" id="hud" style="display:none;">
+        <span id="display-name">Dino</span> (<span id="display-type">Type</span>) | Age: <span id="display-age">Baby</span>
+    </div>
+    <button id="reset-btn" style="display:none;" onclick="resetGame()">Reset Game</button>
+
+    <div id="setup-screen" class="ui-screen">
+        <div class="menu-box">
+            <h2>Hatch Your Dino</h2>
+            <p>Pick a species:</p>
+            <div>
+                <div class="dino-choice selected" onclick="selectType('T-Rex', this)">🦖 T-Rex</div>
+                <div class="dino-choice" onclick="selectType('Brachiosaurus', this)">🦕 Brach</div>
+                <div class="dino-choice" onclick="selectType('Triceratops', this)">🛡️ Tri</div>
+            </div>
+            <p>Give them a name:</p>
+            <input type="text" id="dino-name-input" value="Little Foot" maxlength="12">
+            <button onclick="startGame()">HATCH EGG</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Game State Object
+    let pet = {
+        name: "",
+        type: "T-Rex",
+        age: "Baby",
+        growthPoints: 0,
+        lastSaved: Date.now()
+    };
+
+    // UI elements
+    const dinoElement = document.getElementById('dino');
+    const dinoRender = document.getElementById('dino-render');
+    const bubble = document.getElementById('speech-bubble');
+    const ground = document.getElementById('ground');
+    const container = document.getElementById('game-container');
+
+    let chosenType = "T-Rex";
+    let isDragging = false;
+    let dragStartX, dragStartY;
+    let wanderInterval;
+    let bubbleTimeout;
+
+    // SVG Pixel Art Substitutes dynamically rendered via CSS Backgrounds
+    const sprites = {
+        'T-Rex': `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M7 2h5v1h1v3h-1v1H9v1h3v1h1v1h-1v1H9v2h1v1H8v-2H7v-1H6v-1H5v-2h1V4h1V2z' fill='%234caf50'/><path d='M10 3h1v1h-1z' fill='%23fff'/><path d='M6 10h1v1H6zM9 13h1v1H9z' fill='%232e7d32'/></svg>")`,
+        'Brachiosaurus': `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M4 1h2v7h5v2h1v3h-1v1H9v-2H6v2H4v-2H3V7h1V1z' fill='%2300bcd4'/><path d='M4 2h1v1H4z' fill='%23fff'/></svg>")`,
+        'Triceratops': `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M3 5h3v2h4v3h3v3h-2v1H9v-2H6v2H4v-2H2V7h1V5z' fill='%23ff9800'/><path d='M2 5h1v2H2zm4 1h1v1H6z' fill='%23fff'/></svg>")`
+    };
+
+    // Dialogue database templates
+    const dialogues = {
+        idle: {
+            'T-Rex': ["*Roars tiny roar*", "I'm working on my scary face.", "Is it lunchtime yet?", "Need... more... meat!"],
+            'Brachiosaurus': ["*Chews air*", "The clouds look delicious today.", "Sky is pretty high up.", "Gulp."],
+            'Triceratops': ["*Digs dirt*", "Can I take a nap right here?", "My horns itchy.", "Found a cool rock!"]
+        },
+        holding: ["Woah, getting a little sea sick!", "Put me down, giant!", "Hey! Watch the tail!", "Uncomfortable!"],
+        dropped: ["Oof! Smooth landing.", "My physics engine wasn't ready for that.", "Back on solid ground.", "A bit dramatic, don't you think?"]
+    };
+
+    // Generate procedural grass decoration
+    function generateGrass() {
+        for(let i = 0; i < 25; i++) {
+            let grass = document.createElement('div');
+            grass.className = 'grass-tuft';
+            grass.style.left = Math.random() * 790 + 'px';
+            grass.style.bottom = (Math.random() * 15 + 85) + 'px';
+            grass.style.animationDelay = (Math.random() * 2) + 's';
+            container.appendChild(grass);
+        }
+    }
+
+    function selectType(type, element) {
+        chosenType = type;
+        document.querySelectorAll('.dino-choice').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+    }
+
+    function startGame() {
+        pet.name = document.getElementById('dino-name-input').value.trim() || "Little Foot";
+        pet.type = chosenType;
+        pet.age = "Baby";
+        pet.growthPoints = 0;
+        pet.lastSaved = Date.now();
+        
+        saveGame();
+        initGame();
+    }
+
+    function initGame() {
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('stats-panel').style.display = 'block';
+        document.getElementById('reset-btn').style.display = 'block';
+        
+        document.getElementById('display-name').innerText = pet.name;
+        document.getElementById('display-type').innerText = pet.type;
+        document.getElementById('display-age').innerText = pet.age;
+        
+        dinoRender.style.backgroundImage = sprites[pet.type];
+        
+        // Calculate offline time and drop in dynamically
+        let timePassed = Date.now() - pet.lastSaved;
+        if(timePassed > 10000) { 
+            setTimeout(() => {
+                saySomething(`*Yawn* I missed you! I was sleeping while you were gone.`);
+            }, 1000);
+        }
+
+        startAI();
+    }
+
+    function saveGame() {
+        pet.lastSaved = Date.now();
+        localStorage.setItem('pixel_dino_save', JSON.stringify(pet));
+    }
+
+    function resetGame() {
+        localStorage.removeItem('pixel_dino_save');
+        location.reload();
+    }
+
+    function speak(text) {
+        bubble.innerText = text;
+        bubble.style.display = 'block';
+        
+        // Follow dino positioning
+        let dinoRect = dinoElement.getBoundingClientRect();
+        let containerRect = container.getBoundingClientRect();
+        
+        bubble.style.left = (dinoElement.offsetLeft + 10) + 'px';
+        bubble.style.top = (dinoElement.offsetTop - 45) + 'px';
+
+        clearTimeout(bubbleTimeout);
+        bubbleTimeout = setTimeout(() => { bubble.style.display = 'none'; }, 3000);
+    }
+
+    function saySomething(forcedText = null) {
+        if(isDragging) return;
+        let linePool = dialogues.idle[pet.type];
+        let randomLine = forcedText || linePool[Math.floor(Math.random() * linePool.length)];
+        speak(randomLine);
+    }
+
+    // AI Wandering loops
+    function startAI() {
+        clearInterval(wanderInterval);
+        wanderInterval = setInterval(() => {
+            if(isDragging) return;
+            
+            // 50% chance to move or say something
+            if(Math.random() > 0.5) {
+                let targetX = Math.random() * 700;
+                dinoElement.style.transition = "left 2s ease-in-out, top 0.5s ease-in";
+                dinoElement.style.left = targetX + 'px';
+                
+                // Flip sprite based on direction
+                let currentLeft = parseFloat(dinoElement.style.left);
+                if (targetX < currentLeft) {
+                    dinoRender.style.transform = "scaleX(-1)";
+                } else {
+                    dinoRender.style.transform = "scaleX(1)";
+                }
+            } else {
+                saySomething();
+            }
+            saveGame();
+        }, 5000);
+    }
+
+    // Drag and Drop Logic
+    dinoElement.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        dinoElement.classList.add('dragging');
+        dinoElement.style.transition = "none";
+        
+        dragStartX = e.clientX - dinoElement.offsetLeft;
+        dragStartY = e.clientY - dinoElement.offsetTop;
+        
+        let heldPool = dialogues.holding;
+        speak(heldPool[Math.floor(Math.random() * heldPool.length)]);
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        let containerRect = container.getBoundingClientRect();
+        let newX = e.clientX - containerRect.left - dragStartX;
+        let newY = e.clientY - containerRect.top - dragStartY;
+        
+        // Boundaries
+        if(newX < 0) newX = 0;
+        if(newX > 740) newX = 740;
+        if(newY < 0) newY = 0;
+        if(newY > 340) newY = 340; // Don't let it pass below the ground ceiling
+        
+        dinoElement.style.left = newX + 'px';
+        dinoElement.style.top = newY + 'px';
+        
+        // Reposition bubble during drag
+        bubble.style.left = (newX + 10) + 'px';
+        bubble.style.top = (newY - 45) + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        dinoElement.classList.remove('dragging');
+        
+        // Apply Gravity Drop back to floor
+        dinoElement.style.transition = "top 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)";
+        dinoElement.style.top = "340px"; // floor level (500px height - 100px ground - 60px dino)
+        
+        let dropPool = dialogues.dropped;
+        setTimeout(() => {
+            speak(dropPool[Math.floor(Math.random() * dropPool.length)]);
+        }, 400);
+        
+        saveGame();
+    });
+
+    // Check Local Storage on boot
+    window.onload = () => {
+        generateGrass();
+        let savedData = localStorage.getItem('pixel_dino_save');
+        if(savedData) {
+            pet = JSON.parse(savedData);
+            initGame();
+        }
+    };
+</script>
+
+</body>
+</html>
