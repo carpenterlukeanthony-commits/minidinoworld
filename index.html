@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Dino Virtual Pet</title>
+    <title>Cute Dino Habitat</title>
     <style>
         * {
             box-sizing: border-box;
@@ -12,8 +12,8 @@
         body {
             margin: 0;
             padding: 0;
-            background: #111;
-            font-family: 'Courier New', Courier, monospace;
+            background: #1a1a1a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -21,35 +21,35 @@
             overflow: hidden;
         }
         #game-container {
-            width: 800px;
-            height: 500px;
-            background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
+            width: 900px;
+            height: 550px;
+            background: linear-gradient(to bottom, #bae6fd, #e0f2fe);
             position: relative;
             overflow: hidden;
-            border: 4px solid #333;
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 6px solid #334155;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
         }
+        
         /* Clouds */
         .cloud {
             position: absolute;
-            background: white;
-            border-radius: 10px;
-            opacity: 0.8;
+            background: #ffffff;
+            border-radius: 50px;
+            opacity: 0.85;
             animation: drift linear infinite;
         }
         .cloud::before, .cloud::after {
             content: '';
             position: absolute;
-            background: white;
+            background: #ffffff;
             border-radius: 50%;
         }
-        .cloud-1 { width: 80px; height: 30px; top: 40px; left: -100px; animation-duration: 25s; }
-        .cloud-2 { width: 120px; height: 40px; top: 80px; left: -150px; animation-duration: 40s; }
-        
+        .cloud-1 { width: 150px; height: 50px; top: 40px; left: -200px; animation-duration: 35s; }
+        .cloud-2 { width: 220px; height: 65px; top: 90px; left: -250px; animation-duration: 55s; }
         @keyframes drift {
             0% { transform: translateX(0); }
-            100% { transform: translateX(1000px); }
+            100% { transform: translateX(1200px); }
         }
 
         /* Ground */
@@ -57,40 +57,42 @@
             position: absolute;
             bottom: 0;
             width: 100%;
-            height: 100px;
-            background: #4CAF50;
-            border-top: 6px solid #388E3C;
+            height: 120px;
+            background: #4ade80;
+            border-top: 8px solid #22c55e;
+            z-index: 2;
         }
-        /* Swaying Grass */
         .grass-tuft {
             position: absolute;
-            bottom: 95px;
-            width: 4px;
-            height: 15px;
-            background: #2E7D32;
+            bottom: 114px;
+            width: 6px;
+            height: 20px;
+            background: #16a34a;
+            border-radius: 3px;
             transform-origin: bottom center;
             animation: sway 3s ease-in-out infinite alternate;
+            z-index: 2;
         }
         @keyframes sway {
-            0% { transform: skewX(-5deg); }
-            100% { transform: skewX(10deg); }
+            0% { transform: skewX(-8deg); }
+            100% { transform: skewX(12deg); }
         }
 
-        /* Dinosaur */
+        /* High-Detail Dino Element */
         #dino {
             position: absolute;
-            width: 60px;
-            height: 60px;
-            bottom: 80px;
-            left: 370px;
+            width: 130px;
+            height: 130px;
+            bottom: 95px;
+            left: 385px;
             cursor: grab;
-            transition: transform 0.1s;
             z-index: 10;
+            transform-origin: bottom center;
         }
-        #dino.dragging {
-            cursor: grabbing;
-            transition: none;
-        }
+        #dino.idle { animation: dino-breathe 1.8s ease-in-out infinite; }
+        #dino.walking { animation: dino-walk 0.6s infinite linear; }
+        #dino.dragging { cursor: grabbing; animation: dino-wiggle 0.2s infinite linear; }
+        
         .dino-sprite {
             width: 100%;
             height: 100%;
@@ -99,42 +101,69 @@
             background-position: bottom center;
         }
 
+        /* Cute Dino Animations */
+        @keyframes dino-breathe {
+            0%, 100% { transform: scale(1, 1); }
+            50% { transform: scale(1.03, 0.96); }
+        }
+        @keyframes dino-walk {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(3deg); }
+        }
+        @keyframes dino-wiggle {
+            0%, 100% { transform: rotate(-5deg) scale(0.95); }
+            50% { transform: rotate(5deg) scale(1.05); }
+        }
+
+        /* Custom Drag & Drop Habitat Items */
+        .placed-item {
+            position: absolute;
+            bottom: 105px;
+            font-size: 38px;
+            z-index: 5;
+            cursor: move;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+            transition: transform 0.1s;
+        }
+        .placed-item:hover { transform: scale(1.2); }
+        .placed-item.dragging-item { opacity: 0.7; transform: scale(1.3); }
+
         /* Speech Bubble */
         #speech-bubble {
             position: absolute;
             background: white;
-            border: 2px solid #333;
-            border-radius: 8px;
-            padding: 8px 12px;
-            font-size: 12px;
+            border: 3px solid #334155;
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 14px;
             font-weight: bold;
-            color: #333;
-            max-width: 200px;
+            color: #1e293b;
+            max-width: 220px;
             display: none;
-            z-index: 20;
-            box-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+            z-index: 40;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
         }
         #speech-bubble::after {
             content: '';
             position: absolute;
-            bottom: -8px;
-            left: 20px;
-            border-width: 8px 8px 0;
+            bottom: -12px;
+            left: 30px;
+            border-width: 12px 12px 0;
             border-style: solid;
             border-color: white transparent;
             display: block;
             width: 0;
         }
 
-        /* UI Overlay Screens */
+        /* Screens & UI Panels */
         .ui-screen {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
-            display: flex;
+            background: rgba(15, 23, 42, 0.85);
+            display: none; /* Hidden by default to stop flashing */
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -142,70 +171,112 @@
             color: white;
         }
         .menu-box {
-            background: #222;
-            border: 4px solid #fff;
-            padding: 30px;
-            border-radius: 10px;
+            background: #1e293b;
+            border: 4px solid #f8fafc;
+            padding: 35px;
+            border-radius: 20px;
             text-align: center;
-            max-width: 400px;
+            max-width: 450px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
         input[type="text"] {
-            padding: 10px;
-            font-family: monospace;
+            padding: 12px;
             font-size: 16px;
-            border: 2px solid #fff;
-            background: #333;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            background: #334155;
             color: white;
             margin-bottom: 20px;
             width: 100%;
             text-align: center;
         }
         button {
-            background: #4CAF50;
+            background: #22c55e;
             color: white;
             border: none;
-            padding: 10px 20px;
-            font-family: monospace;
+            padding: 12px 24px;
             font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
             cursor: pointer;
-            border-bottom: 4px solid #2E7D32;
+            border-bottom: 4px solid #16a34a;
+            transition: all 0.1s;
         }
         button:active {
             border-bottom: 0;
-            margin-top: 4px;
+            transform: translateY(4px);
         }
         .dino-choice {
             display: inline-block;
             margin: 10px;
-            padding: 10px;
-            border: 2px dashed #666;
+            padding: 15px;
+            border: 3px dashed #64748b;
+            border-radius: 12px;
             cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
         }
         .dino-choice.selected {
-            border-color: #4CAF50;
-            background: #333;
+            border-color: #22c55e;
+            background: #334155;
+            transform: scale(1.05);
         }
 
-        /* Stats Panel */
+        /* Top HUD */
         #stats-panel {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0,0,0,0.6);
+            top: 15px;
+            left: 15px;
+            background: rgba(15, 23, 42, 0.75);
             color: white;
-            padding: 10px;
-            border-radius: 50px;
-            font-size: 14px;
-            border: 1px solid #555;
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 600;
+            border: 1px solid #475569;
+            z-index: 30;
+            backdrop-filter: blur(4px);
         }
         #reset-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #cc3333;
-            border-bottom: 2px solid #990000;
-            font-size: 11px;
-            padding: 5px 10px;
+            top: 15px;
+            right: 15px;
+            background: #ef4444;
+            border-bottom: 3px solid #b91c1c;
+            font-size: 12px;
+            padding: 8px 14px;
+            z-index: 30;
+        }
+
+        /* Fixed Habitat Decor Menu Dock */
+        #shop-panel {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.9);
+            padding: 12px 25px;
+            border-radius: 16px;
+            border: 2px solid #64748b;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 30;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .shop-title {
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-right: 5px;
+        }
+        .shop-btn {
+            background: #334155;
+            border-bottom: 3px solid #1e293b;
+            font-size: 13px;
+            padding: 8px 14px;
         }
     </style>
 </head>
@@ -215,28 +286,34 @@
     <div class="cloud cloud-1"></div>
     <div class="cloud cloud-2"></div>
     <div id="ground"></div>
-
     <div id="speech-bubble"></div>
 
-    <div id="dino">
+    <div id="dino" class="idle">
         <div class="dino-sprite" id="dino-render"></div>
     </div>
 
-    <div id="stats-panel" id="hud" style="display:none;">
-        <span id="display-name">Dino</span> (<span id="display-type">Type</span>) | Age: <span id="display-age">Baby</span>
+    <div id="stats-panel" style="display:none;">
+        🦕 <span id="display-name">Dino</span> the <span id="display-type">Type</span> | Stage: <span id="display-age">Baby</span>
     </div>
-    <button id="reset-btn" style="display:none;" onclick="resetGame()">Reset Game</button>
+    <button id="reset-btn" style="display:none;" onclick="resetGame()">Reset Pet</button>
+    
+    <div id="shop-panel" style="display:none;">
+        <div class="shop-title">Habitat Items:</div>
+        <button class="shop-btn" onclick="spawnItem('🌸')">🌸 Place Flower</button>
+        <button class="shop-btn" onclick="spawnItem('🔥')">🔥 Place Fire Pit</button>
+        <button class="shop-btn" onclick="spawnItem('🌳')">🌳 Place Tree</button>
+    </div>
 
     <div id="setup-screen" class="ui-screen">
         <div class="menu-box">
-            <h2>Hatch Your Dino</h2>
-            <p>Pick a species:</p>
+            <h2>Hatch a Dino Partner</h2>
+            <p>Choose a companion species:</p>
             <div>
                 <div class="dino-choice selected" onclick="selectType('T-Rex', this)">🦖 T-Rex</div>
                 <div class="dino-choice" onclick="selectType('Brachiosaurus', this)">🦕 Brach</div>
-                <div class="dino-choice" onclick="selectType('Triceratops', this)">🛡️ Tri</div>
+                <div class="dino-choice" onclick="selectType('Triceratops', this)">🛡️ Triceratops</div>
             </div>
-            <p>Give them a name:</p>
+            <p>Name your dinosaur:</p>
             <input type="text" id="dino-name-input" value="Little Foot" maxlength="12">
             <button onclick="startGame()">HATCH EGG</button>
         </div>
@@ -244,53 +321,55 @@
 </div>
 
 <script>
-    // Game State Object
     let pet = {
         name: "",
         type: "T-Rex",
         age: "Baby",
-        growthPoints: 0,
+        placedItems: [],
         lastSaved: Date.now()
     };
 
-    // UI elements
     const dinoElement = document.getElementById('dino');
     const dinoRender = document.getElementById('dino-render');
     const bubble = document.getElementById('speech-bubble');
-    const ground = document.getElementById('ground');
     const container = document.getElementById('game-container');
 
     let chosenType = "T-Rex";
-    let isDragging = false;
+    let isDraggingDino = false;
+    let isDraggingItem = false;
+    let activeItemElement = null;
     let dragStartX, dragStartY;
-    let wanderInterval;
+    let wanderTimeout;
     let bubbleTimeout;
 
-    // SVG Pixel Art Substitutes dynamically rendered via CSS Backgrounds
+    // High Definition Vector SVG Sprites
     const sprites = {
-        'T-Rex': `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M7 2h5v1h1v3h-1v1H9v1h3v1h1v1h-1v1H9v2h1v1H8v-2H7v-1H6v-1H5v-2h1V4h1V2z' fill='%234caf50'/><path d='M10 3h1v1h-1z' fill='%23fff'/><path d='M6 10h1v1H6zM9 13h1v1H9z' fill='%232e7d32'/></svg>")`,
-        'Brachiosaurus': `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M4 1h2v7h5v2h1v3h-1v1H9v-2H6v2H4v-2H3V7h1V1z' fill='%2300bcd4'/><path d='M4 2h1v1H4z' fill='%23fff'/></svg>")`,
-        'Triceratops': `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M3 5h3v2h4v3h3v3h-2v1H9v-2H6v2H4v-2H2V7h1V5z' fill='%23ff9800'/><path d='M2 5h1v2H2zm4 1h1v1H6z' fill='%23fff'/></svg>")`
+        'T-Rex': `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='55' cy='35' r='20' fill='%2322c55e'/><rect x='40' y='45' width='35' height='40' rx='10' fill='%2322c55e'/><rect x='60' y='30' width='25' height='15' rx='5' fill='%2322c55e'/><circle cx='70' cy='33' r='4' fill='white'/><circle cx='70' cy='33' r='2' fill='black'/><rect x='42' y='80' width='10' height='15' fill='%2316a34a'/><rect x='58' y='80' width='10' height='15' fill='%2316a34a'/><path d='M30 55 Q 40 70 45 60' stroke='%2322c55e' stroke-width='8' stroke-linecap='round' fill='none'/></svg>")`,
+        'Brachiosaurus': `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='30' y='55' width='45' height='30' rx='15' fill='%230ea5e9'/><rect x='60' y='15' width='14' height='50' rx='7' fill='%230ea5e9'/><circle cx='67' cy='20' r='12' fill='%230ea5e9'/><circle cx='71' cy='18' r='3' fill='white'/><circle cx='71' cy='18' r='1.5' fill='black'/><rect x='38' y='80' width='10' height='15' fill='%230284c7'/><rect x='58' y='80' width='10' height='15' fill='%230284c7'/><path d='M32 65 Q 15 65 20 75' stroke='%230ea5e9' stroke-width='8' stroke-linecap='round' fill='none'/></svg>")`,
+        'Triceratops': `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='25' y='50' width='45' height='35' rx='12' fill='%23f97316'/><circle cx='65' cy='55' r='18' fill='%23f97316'/><polygon points='65,35 80,45 65,50' fill='%23ffedd5'/><polygon points='75,50 88,58 74,62' fill='%23ffedd5'/><circle cx='62' cy='50' r='3' fill='white'/><circle cx='62' cy='50' r='1.5' fill='black'/><rect x='32' y='80' width='10' height='12' fill='%23ea580c'/><rect x='52' y='80' width='10' height='12' fill='%23ea580c'/><path d='M28 60 Q 15 55 18 70' stroke='%23f97316' stroke-width='7' stroke-linecap='round' fill='none'/></svg>")`
     };
 
-    // Dialogue database templates
     const dialogues = {
         idle: {
-            'T-Rex': ["*Roars tiny roar*", "I'm working on my scary face.", "Is it lunchtime yet?", "Need... more... meat!"],
-            'Brachiosaurus': ["*Chews air*", "The clouds look delicious today.", "Sky is pretty high up.", "Gulp."],
-            'Triceratops': ["*Digs dirt*", "Can I take a nap right here?", "My horns itchy.", "Found a cool rock!"]
+            'T-Rex': ["*Stomps happily*", "I'm working on my roar!", "Is it snack time yet?", "Look at my tiny arms!"],
+            'Brachiosaurus': ["*Chews grass*", "The view up here is amazing.", "Gulp. Yummy leaves.", "Everything looks so peaceful."],
+            'Triceratops': ["*Polishes horns*", "Can I take a quick nap?", "Ready for an adventure!", "Let's check out the decorations."]
         },
-        holding: ["Woah, getting a little sea sick!", "Put me down, giant!", "Hey! Watch the tail!", "Uncomfortable!"],
-        dropped: ["Oof! Smooth landing.", "My physics engine wasn't ready for that.", "Back on solid ground.", "A bit dramatic, don't you think?"]
+        holding: ["Whoa, getting dizzy!", "Put me down gentle!", "Hey! I can fly!", "Careful with the tail!"],
+        dropped: ["Oof! Perfect landing.", "Back to exploring!", "That was fun, let's do it again."],
+        items: {
+            '🌸': ["*Sniffs flower* Ah, smells wonderful!", "A very pretty flower.", "*Gently touches flower*"],
+            '🔥': ["Ooh, nice and warm.", "*Sits by fire pit to warm up*", "Cozy vibes."],
+            '🌳': ["*Leans against tree trunk*", "Ah, nice shade here.", "Perfect spot to hide."]
+        }
     };
 
-    // Generate procedural grass decoration
     function generateGrass() {
-        for(let i = 0; i < 25; i++) {
+        for(let i = 0; i < 20; i++) {
             let grass = document.createElement('div');
             grass.className = 'grass-tuft';
-            grass.style.left = Math.random() * 790 + 'px';
-            grass.style.bottom = (Math.random() * 15 + 85) + 'px';
+            grass.style.left = Math.random() * 880 + 'px';
+            grass.style.bottom = (Math.random() * 15 + 105) + 'px';
             grass.style.animationDelay = (Math.random() * 2) + 's';
             container.appendChild(grass);
         }
@@ -306,9 +385,8 @@
         pet.name = document.getElementById('dino-name-input').value.trim() || "Little Foot";
         pet.type = chosenType;
         pet.age = "Baby";
-        pet.growthPoints = 0;
+        pet.placedItems = [];
         pet.lastSaved = Date.now();
-        
         saveGame();
         initGame();
     }
@@ -316,6 +394,7 @@
     function initGame() {
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('stats-panel').style.display = 'block';
+        document.getElementById('shop-panel').style.display = 'flex';
         document.getElementById('reset-btn').style.display = 'block';
         
         document.getElementById('display-name').innerText = pet.name;
@@ -324,79 +403,135 @@
         
         dinoRender.style.backgroundImage = sprites[pet.type];
         
-        // Calculate offline time and drop in dynamically
-        let timePassed = Date.now() - pet.lastSaved;
-        if(timePassed > 10000) { 
-            setTimeout(() => {
-                saySomething(`*Yawn* I missed you! I was sleeping while you were gone.`);
-            }, 1000);
-        }
+        // Render saved environment layout items
+        document.querySelectorAll('.placed-item').forEach(el => el.remove());
+        pet.placedItems.forEach((item, index) => renderItem(item.type, item.x, index));
 
         startAI();
     }
 
-    function saveGame() {
-        pet.lastSaved = Date.now();
-        localStorage.setItem('pixel_dino_save', JSON.stringify(pet));
+    function spawnItem(itemType) {
+        let uniqueId = pet.placedItems.length;
+        let defaultX = Math.random() * 600 + 100;
+        pet.placedItems.push({ type: itemType, x: defaultX });
+        renderItem(itemType, defaultX, uniqueId);
+        saveGame();
     }
 
-    function resetGame() {
-        localStorage.removeItem('pixel_dino_save');
-        location.reload();
+    function renderItem(type, x, id) {
+        let itemDiv = document.createElement('div');
+        itemDiv.className = 'placed-item';
+        itemDiv.dataset.id = id;
+        itemDiv.innerText = type;
+        itemDiv.style.left = x + 'px';
+        
+        // Enable Custom Decoration Draggability
+        itemDiv.addEventListener('mousedown', (e) => {
+            isDraggingItem = true;
+            activeItemElement = itemDiv;
+            itemDiv.classList.add('dragging-item');
+            let rect = container.getBoundingClientRect();
+            dragStartX = e.clientX - itemDiv.offsetLeft;
+            e.stopPropagation(); // Stops dino from being picked up underneath it
+        });
+
+        container.appendChild(itemDiv);
+    }
+
+    function walkToLocation(targetX, callback) {
+        if (isDraggingDino) return;
+        
+        dinoElement.className = 'walking';
+        // Flip graphic toward direction
+        if (targetX < dinoElement.offsetLeft) {
+            dinoRender.style.transform = "scaleX(-1)";
+        } else {
+            dinoRender.style.transform = "scaleX(1)";
+        }
+
+        // Calculate dynamic timing based on distance to move naturally
+        let distance = Math.abs(targetX - dinoElement.offsetLeft);
+        let duration = distance * 4; // 4ms per pixel
+        
+        dinoElement.style.transition = `left ${duration}ms linear`;
+        dinoElement.style.left = targetX + 'px';
+
+        setTimeout(() => {
+            if (!isDraggingDino) {
+                dinoElement.className = 'idle';
+                if (callback) callback();
+            }
+        }, duration);
     }
 
     function speak(text) {
         bubble.innerText = text;
         bubble.style.display = 'block';
-        
-        // Follow dino positioning
-        let dinoRect = dinoElement.getBoundingClientRect();
-        let containerRect = container.getBoundingClientRect();
-        
-        bubble.style.left = (dinoElement.offsetLeft + 10) + 'px';
-        bubble.style.top = (dinoElement.offsetTop - 45) + 'px';
-
+        updateBubblePosition();
         clearTimeout(bubbleTimeout);
-        bubbleTimeout = setTimeout(() => { bubble.style.display = 'none'; }, 3000);
+        bubbleTimeout = setTimeout(() => { bubble.style.display = 'none'; }, 3500);
     }
 
-    function saySomething(forcedText = null) {
-        if(isDragging) return;
-        let linePool = dialogues.idle[pet.type];
-        let randomLine = forcedText || linePool[Math.floor(Math.random() * linePool.length)];
-        speak(randomLine);
+    function updateBubblePosition() {
+        bubble.style.left = (dinoElement.offsetLeft + 10) + 'px';
+        bubble.style.top = (dinoElement.offsetTop - 55) + 'px';
     }
 
-    // AI Wandering loops
     function startAI() {
-        clearInterval(wanderInterval);
-        wanderInterval = setInterval(() => {
-            if(isDragging) return;
-            
-            // 50% chance to move or say something
-            if(Math.random() > 0.5) {
-                let targetX = Math.random() * 700;
-                dinoElement.style.transition = "left 2s ease-in-out, top 0.5s ease-in";
-                dinoElement.style.left = targetX + 'px';
-                
-                // Flip sprite based on direction
-                let currentLeft = parseFloat(dinoElement.style.left);
-                if (targetX < currentLeft) {
-                    dinoRender.style.transform = "scaleX(-1)";
-                } else {
-                    dinoRender.style.transform = "scaleX(1)";
-                }
-            } else {
-                saySomething();
+        clearTimeout(wanderTimeout);
+        
+        let decisionLoop = () => {
+            if (isDraggingDino || isDraggingItem) {
+                wanderTimeout = setTimeout(decisionLoop, 4000);
+                return;
             }
-            saveGame();
-        }, 5000);
+
+            let roll = Math.random();
+            
+            // 45% chance to wander toward a custom placed item and interact
+            if (roll < 0.45 && pet.placedItems.length > 0) {
+                let randomItem = pet.placedItems[Math.floor(Math.random() * pet.placedItems.length)];
+                walkToLocation(randomItem.x - 20, () => {
+                    let lines = dialogues.items[randomItem.type];
+                    speak(lines[Math.floor(Math.random() * lines.length)]);
+                });
+            } 
+            // 35% chance to just wander around general area
+            else if (roll < 0.80) {
+                let targetX = Math.random() * 740;
+                walkToLocation(targetX, () => {
+                    if(Math.random() > 0.6) {
+                        let pool = dialogues.idle[pet.type];
+                        speak(pool[Math.floor(Math.random() * pool.length)]);
+                    }
+                });
+            }
+            // 20% stay completely idle
+            else {
+                let pool = dialogues.idle[pet.type];
+                speak(pool[Math.floor(Math.random() * pool.length)]);
+            }
+
+            wanderTimeout = setTimeout(decisionLoop, Math.random() * 6000 + 4000);
+        };
+        
+        wanderTimeout = setTimeout(decisionLoop, 2000);
     }
 
-    // Drag and Drop Logic
+    function saveGame() {
+        pet.lastSaved = Date.now();
+        localStorage.setItem('cute_dino_habitat_save', JSON.stringify(pet));
+    }
+
+    function resetGame() {
+        localStorage.removeItem('cute_dino_habitat_save');
+        location.reload();
+    }
+
+    // Global Mouse Movement Handlers
     dinoElement.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        dinoElement.classList.add('dragging');
+        isDraggingDino = true;
+        dinoElement.className = 'dragging';
         dinoElement.style.transition = "none";
         
         dragStartX = e.clientX - dinoElement.offsetLeft;
@@ -407,50 +542,71 @@
     });
 
     document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        
         let containerRect = container.getBoundingClientRect();
-        let newX = e.clientX - containerRect.left - dragStartX;
-        let newY = e.clientY - containerRect.top - dragStartY;
         
-        // Boundaries
-        if(newX < 0) newX = 0;
-        if(newX > 740) newX = 740;
-        if(newY < 0) newY = 0;
-        if(newY > 340) newY = 340; // Don't let it pass below the ground ceiling
+        // Handle Dino Dragging
+        if (isDraggingDino) {
+            let newX = e.clientX - containerRect.left - dragStartX;
+            let newY = e.clientY - containerRect.top - dragStartY;
+            
+            if(newX < 0) newX = 0;
+            if(newX > 770) newX = 770;
+            if(newY < 0) newY = 0;
+            if(newY > 325) newY = 325;
+            
+            dinoElement.style.left = newX + 'px';
+            dinoElement.style.top = newY + 'px';
+            updateBubblePosition();
+        }
         
-        dinoElement.style.left = newX + 'px';
-        dinoElement.style.top = newY + 'px';
-        
-        // Reposition bubble during drag
-        bubble.style.left = (newX + 10) + 'px';
-        bubble.style.top = (newY - 45) + 'px';
+        // Handle Custom Item Dragging
+        if (isDraggingItem && activeItemElement) {
+            let newX = e.clientX - containerRect.left - dragStartX;
+            if(newX < 10) newX = 10;
+            if(newX > 850) newX = 850;
+            
+            activeItemElement.style.left = newX + 'px';
+            
+            // Save item configuration positioning live
+            let id = activeItemElement.dataset.id;
+            if(pet.placedItems[id]) {
+                pet.placedItems[id].x = newX;
+            }
+        }
     });
 
     document.addEventListener('mouseup', () => {
-        if (!isDragging) return;
-        isDragging = false;
-        dinoElement.classList.remove('dragging');
+        if (isDraggingDino) {
+            isDraggingDino = false;
+            dinoElement.className = 'idle';
+            dinoElement.style.transition = "top 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)";
+            dinoElement.style.top = "325px"; // Snap straight back down to lawn boundary
+            
+            let dropPool = dialogues.dropped;
+            setTimeout(() => { speak(dropPool[Math.floor(Math.random() * dropPool.length)]); }, 400);
+            saveGame();
+        }
         
-        // Apply Gravity Drop back to floor
-        dinoElement.style.transition = "top 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)";
-        dinoElement.style.top = "340px"; // floor level (500px height - 100px ground - 60px dino)
-        
-        let dropPool = dialogues.dropped;
-        setTimeout(() => {
-            speak(dropPool[Math.floor(Math.random() * dropPool.length)]);
-        }, 400);
-        
-        saveGame();
+        if (isDraggingItem) {
+            isDraggingItem = false;
+            if(activeItemElement) {
+                activeItemElement.classList.remove('dragging-item');
+            }
+            activeItemElement = null;
+            saveGame();
+        }
     });
 
-    // Check Local Storage on boot
+    // Run Engine
     window.onload = () => {
         generateGrass();
-        let savedData = localStorage.getItem('pixel_dino_save');
+        let savedData = localStorage.getItem('cute_dino_habitat_save');
         if(savedData) {
             pet = JSON.parse(savedData);
             initGame();
+        } else {
+            // Show setup screen safely without any flicker
+            document.getElementById('setup-screen').style.display = 'flex';
         }
     };
 </script>
