@@ -1,550 +1,1533 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cute Dino Habitat</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-        }
-        body {
-            margin: 0;
-            padding: 0;
-            background: #1e1e24;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-        
-        /* Main Game Screen Window */
-        #game-container {
-            width: 900px;
-            height: 520px;
-            background: linear-gradient(to bottom, #bae6fd, #e0f2fe);
-            position: relative;
-            overflow: hidden;
-            border: 6px solid #334155;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-        
-        /* Clean Cartoon Landscape Hills (No random grass lines) */
-        #sky-hills {
-            position: absolute;
-            bottom: 110px;
-            width: 100%;
-            height: 60px;
-            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 60'><path d='M0 40 Q 250 10 450 35 T 900 20 L 900 60 L 0 60 Z' fill='%2322c55e' opacity='0.5'/></svg>");
-            background-size: cover;
-            z-index: 1;
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Draftly — AI Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=League+Spartan:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  /* ── TOKENS ── */
+  :root {
+    --d-blue:       #4B6093;
+    --d-blue-dk:    #2C3E6B;
+    --d-blue-lt:    #6B7FB5;
+    --d-blue-ghost: rgba(75,96,147,0.12);
+    --d-blue-mid:   rgba(75,96,147,0.25);
+    --cream:        #FFF8E5;
+    --cream-dk:     #F2E9CC;
+    --ink:          #1A1A2E;
+    --ink-soft:     #3D3D5C;
+    --ink-mute:     #7A7A99;
+    --white:        #FFFFFF;
+    --paper:        #FDFAF3;
+    --rule:         rgba(75,96,147,0.18);
+    --spark:        #E8A838;
+    --spark-lt:     rgba(232,168,56,0.15);
+    --success:      #3D9E6B;
+    --success-lt:   rgba(61,158,107,0.12);
+    --danger:       #C1503A;
 
-        #ground {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 120px;
-            background: #4ade80;
-            border-top: 8px solid #16a34a;
-            z-index: 2;
-        }
-        
-        /* Smooth Cartoon Clouds */
-        .cloud {
-            position: absolute;
-            background: #ffffff;
-            border-radius: 50px;
-            opacity: 0.9;
-            animation: drift linear infinite;
-            z-index: 1;
-        }
-        .cloud-1 { width: 140px; height: 45px; top: 40px; left: -200px; animation-duration: 45s; }
-        .cloud-2 { width: 190px; height: 55px; top: 90px; left: -250px; animation-duration: 65s; }
-        @keyframes drift {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(1200px); }
-        }
+    --sidebar-w:    240px;
+    --sidebar-sm:   64px;
+    --drawer-w:     480px;
+    --radius:       10px;
+    --radius-sm:    6px;
+    --shadow:       0 2px 12px rgba(44,62,107,0.13);
+    --shadow-lg:    0 8px 32px rgba(44,62,107,0.18);
+    --transition:   0.22s ease;
+  }
 
-        /* Adopt Me Style Dino Character */
-        #dino {
-            position: absolute;
-            width: 135px;
-            height: 135px;
-            bottom: 90px;
-            left: 380px;
-            cursor: grab;
-            z-index: 10;
-            transform-origin: bottom center;
-            display: none; /* Managed via JS */
-        }
-        #dino.idle { animation: plush-breathe 2s ease-in-out infinite; }
-        #dino.walking { animation: plush-bounce 0.5s infinite ease-in-out; }
-        #dino.dragging { cursor: grabbing; animation: plush-panic 0.15s infinite alternate ease-in-out; }
-        
-        .dino-sprite {
-            width: 100%;
-            height: 100%;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: bottom center;
-        }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        @keyframes plush-breathe {
-            0%, 100% { transform: scale(1, 1); }
-            50% { transform: scale(1.04, 0.96); }
-        }
-        @keyframes plush-bounce {
-            0%, 100% { transform: translateY(0) scale(1, 1); }
-            50% { transform: translateY(-12px) scale(0.95, 1.05); }
-        }
-        @keyframes plush-panic {
-            0% { transform: scale(0.95) rotate(-3deg); }
-            100% { transform: scale(1.05) rotate(3deg); }
-        }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--d-blue-dk);
+    color: var(--ink);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+  }
 
-        /* Draggable Decor Items */
-        .placed-item {
-            position: absolute;
-            bottom: 100px;
-            font-size: 42px;
-            z-index: 5;
-            cursor: move;
-            filter: drop-shadow(0 6px 6px rgba(0,0,0,0.15));
-        }
-        .placed-item.dragging-item { opacity: 0.7; transform: scale(1.2); }
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    background: var(--d-blue-dk);
+    display: flex;
+    flex-direction: column;
+    transition: width var(--transition), min-width var(--transition);
+    overflow: hidden;
+    border-right: 1px solid rgba(255,255,255,0.07);
+    position: relative;
+    z-index: 10;
+  }
+  .sidebar.collapsed {
+    width: var(--sidebar-sm);
+    min-width: var(--sidebar-sm);
+  }
 
-        /* Speech Bubble */
-        #speech-bubble {
-            position: absolute;
-            background: white;
-            border: 3px solid #334155;
-            border-radius: 16px;
-            padding: 10px 16px;
-            font-size: 14px;
-            font-weight: bold;
-            color: #1e293b;
-            max-width: 220px;
-            display: none;
-            z-index: 40;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-        }
+  .sidebar-header {
+    padding: 20px 16px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    min-height: 64px;
+  }
+  .sidebar-badge {
+    width: 32px;
+    height: 32px;
+    background: var(--d-blue);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-family: 'League Spartan', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--white);
+    letter-spacing: -0.5px;
+  }
+  .sidebar-wordmark {
+    font-family: 'League Spartan', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--white);
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+    opacity: 1;
+    transition: opacity var(--transition);
+  }
+  .sidebar.collapsed .sidebar-wordmark { opacity: 0; pointer-events: none; }
 
-        /* Control Panel Menu Dock at Bottom */
-        #control-dock {
-            width: 900px;
-            background: #1e293b;
-            border: 4px solid #334155;
-            border-top: none;
-            border-radius: 0 0 16px 16px;
-            padding: 15px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-        }
-        .dock-group { display: flex; align-items: center; gap: 12px; }
-        .dock-label { font-size: 12px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
-        
-        button {
-            background: #334155;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            font-size: 14px;
-            font-weight: 700;
-            border-radius: 8px;
-            cursor: pointer;
-            border-bottom: 3px solid #1e293b;
-            transition: all 0.1s;
-        }
-        button:active { transform: translateY(2px); border-bottom-width: 1px; }
-        button.success { background: #22c55e; border-bottom-color: #16a34a; }
-        button.danger { background: #ef4444; border-bottom-color: #b91c1c; }
+  .sidebar-section-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    padding: 18px 16px 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity var(--transition);
+  }
+  .sidebar.collapsed .sidebar-section-label { opacity: 0; }
 
-        /* Setup Screen Overlay */
-        .ui-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #111827;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            color: white;
-        }
-        .menu-box {
-            background: #1e293b;
-            border: 4px solid #475569;
-            padding: 40px;
-            border-radius: 24px;
-            text-align: center;
-            width: 460px;
-        }
-        input[type="text"] {
-            padding: 12px;
-            font-size: 16px;
-            border: 2px solid #475569;
-            border-radius: 8px;
-            background: #0f172a;
-            color: white;
-            margin-bottom: 20px;
-            width: 100%;
-            text-align: center;
-        }
-        .dino-choice {
-            display: inline-block;
-            margin: 8px;
-            padding: 14px;
-            border: 3px dashed #475569;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .dino-choice.selected {
-            border-color: #22c55e;
-            background: #0f172a;
-        }
-    </style>
+  /* Vault list */
+  .vault-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 8px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+  }
+  .vault-empty {
+    padding: 24px 16px;
+    text-align: center;
+    transition: opacity var(--transition);
+  }
+  .sidebar.collapsed .vault-empty { opacity: 0; pointer-events: none; }
+  .vault-empty-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+    opacity: 0.4;
+  }
+  .vault-empty-text {
+    font-family: 'Caveat', cursive;
+    font-size: 14px;
+    color: rgba(255,255,255,0.35);
+    line-height: 1.4;
+  }
+
+  .vault-item {
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background var(--transition);
+    margin-bottom: 2px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    min-height: 44px;
+  }
+  .vault-item:hover { background: rgba(255,255,255,0.07); }
+  .vault-item.active { background: rgba(255,255,255,0.12); }
+  .vault-item-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--spark);
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+  .vault-item-content { flex: 1; min-width: 0; }
+  .vault-item-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.85);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+  .vault-item-meta {
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 2px;
+  }
+  .sidebar.collapsed .vault-item-content { display: none; }
+
+  /* Sidebar bottom */
+  .sidebar-bottom {
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding: 12px 8px;
+  }
+  .sidebar-toggle-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255,255,255,0.45);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    transition: background var(--transition), color var(--transition);
+  }
+  .sidebar-toggle-btn:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.75); }
+  .toggle-icon { font-size: 16px; flex-shrink: 0; transition: transform var(--transition); }
+  .sidebar.collapsed .toggle-icon { transform: rotate(180deg); }
+  .toggle-label { white-space: nowrap; transition: opacity var(--transition); }
+  .sidebar.collapsed .toggle-label { opacity: 0; }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--cream);
+    position: relative;
+  }
+
+  /* Topbar */
+  .topbar {
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    box-shadow: 0 1px 0 rgba(75,96,147,0.06);
+  }
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .topbar-title {
+    font-family: 'Caveat', cursive;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--d-blue-dk);
+  }
+  .topbar-divider {
+    width: 1px;
+    height: 18px;
+    background: var(--rule);
+  }
+  .topbar-sub {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--ink-mute);
+    font-weight: 400;
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* AI Studio trigger button */
+  .ai-studio-trigger {
+    background: var(--d-blue-dk);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+    font-family: 'League Spartan', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background var(--transition), transform 0.1s;
+    letter-spacing: 0.01em;
+  }
+  .ai-studio-trigger:hover { background: var(--d-blue); }
+  .ai-studio-trigger:active { transform: scale(0.98); }
+
+  /* Content area */
+  .content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 32px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--cream-dk) transparent;
+  }
+
+  /* Welcome / empty state */
+  .workspace-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    padding: 40px;
+  }
+  .workspace-empty-graphic {
+    width: 80px;
+    height: 80px;
+    background: var(--d-blue-ghost);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin-bottom: 20px;
+    border: 2px dashed var(--rule);
+  }
+  .workspace-empty h2 {
+    font-family: 'Caveat', cursive;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--d-blue-dk);
+    margin-bottom: 8px;
+  }
+  .workspace-empty p {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--ink-mute);
+    line-height: 1.6;
+    max-width: 320px;
+    margin-bottom: 24px;
+  }
+
+  /* Vault detail view */
+  .vault-detail {
+    display: none;
+    animation: fadeIn 0.2s ease;
+  }
+  .vault-detail.visible { display: block; }
+
+  .detail-header {
+    margin-bottom: 24px;
+  }
+  .detail-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 6px;
+  }
+  .detail-title {
+    font-family: 'League Spartan', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--d-blue-dk);
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .detail-date {
+    font-size: 12px;
+    color: var(--ink-mute);
+  }
+
+  .detail-card {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .detail-card-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .detail-card-label .badge-pill {
+    background: var(--d-blue-ghost);
+    color: var(--d-blue);
+    border-radius: 20px;
+    padding: 1px 8px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+  .detail-original {
+    font-size: 13px;
+    color: var(--ink-mute);
+    line-height: 1.6;
+    font-style: italic;
+    text-decoration: line-through;
+    text-decoration-color: rgba(122,122,153,0.4);
+  }
+  .detail-refined {
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  .detail-divider {
+    height: 1px;
+    background: var(--rule);
+    margin: 12px 0;
+  }
+
+  .tag-rack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .tag-chip-ro {
+    background: var(--d-blue-ghost);
+    color: var(--d-blue-dk);
+    border: 1px solid rgba(75,96,147,0.2);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ── DRAWER OVERLAY ── */
+  .drawer-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(28,35,58,0.45);
+    z-index: 100;
+    backdrop-filter: blur(2px);
+  }
+  .drawer-backdrop.open { display: block; animation: fadeIn 0.2s ease; }
+
+  .drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: var(--drawer-w);
+    height: 100vh;
+    background: var(--paper);
+    box-shadow: -8px 0 40px rgba(44,62,107,0.2);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.32s cubic-bezier(0.32,0,0.15,1);
+    overflow: hidden;
+  }
+  .drawer.open { transform: translateX(0); }
+
+  /* Drawer header */
+  .drawer-header {
+    background: var(--d-blue-dk);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .drawer-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .drawer-title {
+    font-family: 'League Spartan', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--white);
+    letter-spacing: 0.01em;
+  }
+  .drawer-symbol {
+    font-size: 18px;
+  }
+  .drawer-close {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: rgba(255,255,255,0.7);
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition);
+  }
+  .drawer-close:hover { background: rgba(255,255,255,0.18); color: var(--white); }
+
+  /* Step progress */
+  .step-progress {
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    gap: 0;
+    border-bottom: 1px solid var(--rule);
+    background: var(--white);
+    flex-shrink: 0;
+  }
+  .step-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    position: relative;
+  }
+  .step-node:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background: var(--rule);
+    z-index: 0;
+    transition: background 0.3s;
+  }
+  .step-node.done:not(:last-child)::after { background: var(--d-blue-lt); }
+  .step-circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--rule);
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--ink-mute);
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s;
+    font-family: 'Inter', sans-serif;
+  }
+  .step-node.active .step-circle {
+    border-color: var(--d-blue);
+    background: var(--d-blue);
+    color: var(--white);
+  }
+  .step-node.done .step-circle {
+    border-color: var(--success);
+    background: var(--success);
+    color: var(--white);
+    font-size: 11px;
+  }
+  .step-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    white-space: nowrap;
+    transition: color 0.3s;
+  }
+  .step-node.active .step-label { color: var(--d-blue); }
+  .step-node.done .step-label { color: var(--success); }
+
+  /* Drawer body */
+  .drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--cream-dk) transparent;
+  }
+
+  /* Step panels */
+  .step-panel { display: none; }
+  .step-panel.active { display: block; animation: fadeUp 0.22s ease; }
+
+  /* Form elements */
+  .field-group { margin-bottom: 16px; }
+  .field-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .field-sub {
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-bottom: 6px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  textarea, input[type="text"], input[type="url"] {
+    width: 100%;
+    background: var(--white);
+    border: 1.5px solid var(--rule);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+    resize: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    outline: none;
+  }
+  textarea:focus, input[type="text"]:focus, input[type="url"]:focus {
+    border-color: var(--d-blue);
+    box-shadow: 0 0 0 3px var(--d-blue-ghost);
+  }
+  textarea.frozen, input.frozen {
+    background: var(--cream);
+    color: var(--ink-mute);
+    border-style: dashed;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .version-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--d-blue-ghost);
+    color: var(--d-blue);
+    border: 1px solid rgba(75,96,147,0.2);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+
+  /* Generated output box */
+  .output-box {
+    background: var(--white);
+    border: 1.5px solid var(--d-blue-lt);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.6;
+    min-height: 60px;
+    position: relative;
+  }
+  .output-box.editable {
+    cursor: text;
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  .output-box.editable:focus {
+    border-color: var(--d-blue);
+    box-shadow: 0 0 0 3px var(--d-blue-ghost);
+  }
+  .output-loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink-mute);
+    font-size: 12px;
+  }
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--rule);
+    border-top-color: var(--d-blue);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 9px 16px;
+    font-family: 'League Spartan', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: all var(--transition);
+    white-space: nowrap;
+  }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: var(--d-blue-dk);
+    color: var(--white);
+  }
+  .btn-primary:hover { background: var(--d-blue); }
+
+  .btn-spark {
+    background: var(--spark);
+    color: var(--ink);
+  }
+  .btn-spark:hover { background: #D49A2E; }
+
+  .btn-success {
+    background: var(--success);
+    color: var(--white);
+  }
+  .btn-success:hover { background: #2E8558; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1.5px solid var(--rule);
+  }
+  .btn-ghost:hover { background: var(--cream); border-color: var(--d-blue-lt); color: var(--d-blue); }
+
+  .btn-danger-ghost {
+    background: transparent;
+    color: var(--danger);
+    border: 1.5px solid rgba(193,80,58,0.25);
+  }
+  .btn-danger-ghost:hover { background: rgba(193,80,58,0.06); }
+
+  .btn-full { width: 100%; justify-content: center; }
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* Context arena */
+  .context-banner {
+    background: var(--d-blue-ghost);
+    border: 1px solid rgba(75,96,147,0.2);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .context-banner strong {
+    color: var(--d-blue-dk);
+    font-weight: 600;
+  }
+
+  /* Tag cloud */
+  .tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    min-height: 48px;
+    padding: 12px;
+    background: var(--white);
+    border: 1.5px solid var(--rule);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+  }
+  .tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--d-blue-ghost);
+    border: 1px solid rgba(75,96,147,0.22);
+    color: var(--d-blue-dk);
+    border-radius: 20px;
+    padding: 4px 10px 4px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    animation: popIn 0.18s ease;
+  }
+  .tag-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-mute);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    transition: background var(--transition), color var(--transition);
+    padding: 0;
+    line-height: 1;
+  }
+  .tag-remove:hover { background: rgba(193,80,58,0.15); color: var(--danger); }
+
+  .tag-quota-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .tag-quota-label {
+    font-size: 11px;
+    color: var(--ink-mute);
+    font-weight: 500;
+  }
+  .tag-quota-count {
+    font-family: 'League Spartan', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--d-blue);
+  }
+  .tag-quota-count.full { color: var(--success); }
+
+  .quota-track {
+    height: 3px;
+    background: var(--cream-dk);
+    border-radius: 2px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .quota-fill {
+    height: 100%;
+    background: var(--d-blue-lt);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+  .quota-fill.full { background: var(--success); }
+
+  /* Section divider */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0 14px;
+  }
+  .section-divider-line { flex: 1; height: 1px; background: var(--rule); }
+  .section-divider-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+
+  /* Save confirmation toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--success);
+    color: var(--white);
+    padding: 12px 18px;
+    border-radius: var(--radius);
+    font-family: 'League Spartan', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.32,0,0.15,1);
+    pointer-events: none;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--cream-dk); border-radius: 3px; }
+
+  /* Utility */
+  .mt-4 { margin-top: 4px; }
+  .mt-8 { margin-top: 8px; }
+  .mt-12 { margin-top: 12px; }
+  .mt-16 { margin-top: 16px; }
+  .text-mute { font-size: 12px; color: var(--ink-mute); line-height: 1.5; }
+</style>
 </head>
 <body>
 
-<div id="game-container">
-    <div class="cloud cloud-1"></div>
-    <div class="cloud cloud-2"></div>
-    <div id="sky-hills"></div>
-    <div id="ground"></div>
-    <div id="speech-bubble"></div>
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-badge">D</div>
+    <span class="sidebar-wordmark">Draftly</span>
+  </div>
 
-    <div id="dino" class="idle">
-        <div class="dino-sprite" id="dino-render"></div>
+  <div class="sidebar-section-label">Vault</div>
+
+  <div class="vault-list" id="vaultList">
+    <div class="vault-empty" id="vaultEmpty">
+      <div class="vault-empty-icon">🗂️</div>
+      <div class="vault-empty-text">Saved projects<br>will appear here</div>
+    </div>
+  </div>
+
+  <div class="sidebar-bottom">
+    <button class="sidebar-toggle-btn" onclick="toggleSidebar()">
+      <span class="toggle-icon">◀</span>
+      <span class="toggle-label">Collapse</span>
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-title">AI Studio</span>
+      <div class="topbar-divider"></div>
+      <span class="topbar-sub">Title · Description · Tags</span>
+    </div>
+    <div class="topbar-right">
+      <button class="ai-studio-trigger" onclick="openDrawer()">
+        🪄✨ Open AI Studio
+      </button>
+    </div>
+  </div>
+
+  <div class="content-area" id="contentArea">
+    <!-- Empty state -->
+    <div class="workspace-empty" id="emptyState">
+      <div class="workspace-empty-graphic">🪄</div>
+      <h2>Your workspace is ready.</h2>
+      <p>Open AI Studio to refine your title, description, and tags — then save them to your Vault.</p>
+      <button class="btn btn-primary" onclick="openDrawer()">🪄✨ Open AI Studio</button>
     </div>
 
-    <div id="setup-screen" class="ui-screen">
-        <div class="menu-box">
-            <h2 style="margin-top:0; font-size:26px;">Hatch Your Pet Dino</h2>
-            <p style="color:#94a3b8;">Pick your starter buddy companion:</p>
-            <div>
-                <div class="dino-choice selected" onclick="selectType('T-Rex', this)">🦖 T-Rex</div>
-                <div class="dino-choice" onclick="selectType('Brachiosaurus', this)">流 Brach</div>
-                <div class="dino-choice" onclick="selectType('Triceratops', this)">🛡️ Tri</div>
-            </div>
-            <p style="color:#94a3b8; margin-top:20px;">Name your pet:</p>
-            <input type="text" id="dino-name-input" value="Nugget" maxlength="12">
-            <button class="success" style="width:100%; padding:14px;" onclick="startGame()">HATCH PET EGG</button>
+    <!-- Vault detail view -->
+    <div class="vault-detail" id="vaultDetail">
+      <div class="detail-header">
+        <div class="detail-label">Vault · Saved Project</div>
+        <div class="detail-title" id="detailTitle">—</div>
+        <div class="detail-date" id="detailDate">—</div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-label">Title <span class="badge-pill">ORIGINAL</span></div>
+        <div class="detail-original" id="detailOrigTitle">—</div>
+        <div class="detail-divider"></div>
+        <div class="detail-card-label">Title <span class="badge-pill" style="background:var(--success-lt);color:var(--success);">REFINED</span></div>
+        <div class="detail-refined" id="detailRefinedTitle">—</div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-label">Description <span class="badge-pill">ORIGINAL</span></div>
+        <div class="detail-original" id="detailOrigDesc">—</div>
+        <div class="detail-divider"></div>
+        <div class="detail-card-label">Description <span class="badge-pill" style="background:var(--success-lt);color:var(--success);">REFINED</span></div>
+        <div class="detail-refined" id="detailRefinedDesc">—</div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-label">Tags</div>
+        <div class="tag-rack" id="detailTags"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- DRAWER BACKDROP -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
+
+<!-- AI STUDIO DRAWER -->
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div class="drawer-header-left">
+      <span class="drawer-symbol">🪄✨</span>
+      <span class="drawer-title">AI Studio</span>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+
+  <!-- Step progress -->
+  <div class="step-progress" id="stepProgress">
+    <div class="step-node active" id="stepNode1">
+      <div class="step-circle" id="stepCircle1">1</div>
+      <div class="step-label">Input</div>
+    </div>
+    <div class="step-node" id="stepNode2">
+      <div class="step-circle" id="stepCircle2">2</div>
+      <div class="step-label">Refine</div>
+    </div>
+    <div class="step-node" id="stepNode3">
+      <div class="step-circle" id="stepCircle3">3</div>
+      <div class="step-label">Context</div>
+    </div>
+    <div class="step-node" id="stepNode4">
+      <div class="step-circle" id="stepCircle4">4</div>
+      <div class="step-label">Tags</div>
+    </div>
+  </div>
+
+  <div class="drawer-body">
+
+    <!-- ── STEP 1: INPUT ── -->
+    <div class="step-panel active" id="step1">
+      <div class="field-group">
+        <label class="field-label" for="inputTitle">Working Title</label>
+        <input type="text" id="inputTitle" placeholder="e.g. How I Grew My Channel to 10K in 90 Days" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="inputDesc">Description</label>
+        <span class="field-sub">Draft your full video description here.</span>
+        <textarea id="inputDesc" rows="7" placeholder="Write your description here — don't worry about making it perfect. That's what AI Studio is for."></textarea>
+      </div>
+      <button class="btn btn-spark btn-full mt-12" id="analyzeBtn" onclick="runStep1()">
+        Analyze & Refine 🪄
+      </button>
+    </div>
+
+    <!-- ── STEP 2: REFINE ── -->
+    <div class="step-panel" id="step2">
+      <div class="field-group">
+        <div class="version-tag">📌 Version 1 — Original (locked)</div>
+        <label class="field-label">Title</label>
+        <input type="text" id="frozenTitle" class="frozen" readonly />
+        <div class="mt-8"></div>
+        <label class="field-label">Description</label>
+        <textarea id="frozenDesc" class="frozen" rows="4" readonly></textarea>
+      </div>
+
+      <div class="section-divider">
+        <div class="section-divider-line"></div>
+        <div class="section-divider-label">AI Refinement</div>
+        <div class="section-divider-line"></div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Refined Title</label>
+        <div id="refinedTitleBox" class="output-box editable" contenteditable="false">
+          <div class="output-loading" id="titleLoading"><div class="spinner"></div> Generating...</div>
         </div>
-    </div>
-</div>
+      </div>
 
-<div id="control-dock">
-    <div class="dock-group">
-        <span class="dock-label">Pet:</span>
-        <strong id="lbl-name" style="color:#38bdf8;">---</strong> 
-        <span id="lbl-meta" style="color:#94a3b8; font-size:13px;">(Baby)</span>
-    </div>
-    
-    <div class="dock-group">
-        <span class="dock-label">Habitat Customization Dock:</span>
-        <button onclick="spawnItem('🌸')">🌸 Flower</button>
-        <button onclick="spawnItem('🔥')">🔥 Fire Pit</button>
-        <button onclick="spawnItem('🌳')">🌳 Tree</button>
+      <div class="field-group">
+        <label class="field-label">Refined Description</label>
+        <div id="refinedDescBox" class="output-box editable" contenteditable="false" style="min-height:120px">
+          <div class="output-loading" id="descLoading"><div class="spinner"></div> Generating...</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-success" id="approveBtn" onclick="approveRefinement()" disabled>Approve ✅</button>
+        <button class="btn btn-ghost" id="regenBtn" onclick="regenRefinement()" disabled>Regenerate 🔄</button>
+      </div>
     </div>
 
-    <div class="dock-group">
-        <button class="danger" onclick="resetGame()">Reset Game</button>
+    <!-- ── STEP 3: CONTEXT ── -->
+    <div class="step-panel" id="step3">
+      <div class="context-banner">
+        <strong>AI Studio will now analyze your approved title and description</strong> alongside any extra context below to map your target keywords.
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="ctxAudience">Target Audience</label>
+        <input type="text" id="ctxAudience" placeholder="e.g. beginner YouTube creators, 18–30" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="ctxStyle">Video Style</label>
+        <input type="text" id="ctxStyle" placeholder="e.g. educational walkthrough, talking head, vlog" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="ctxTone">Tone</label>
+        <input type="text" id="ctxTone" placeholder="e.g. motivational, casual, direct" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="ctxExtra">Additional Context</label>
+        <textarea id="ctxExtra" rows="3" placeholder="Anything else that might help — niche, competitors, topic angle..."></textarea>
+      </div>
+
+      <button class="btn btn-spark btn-full mt-12" onclick="runStep3()">
+        Generate Project Tags ✨
+      </button>
     </div>
-</div>
+
+    <!-- ── STEP 4: TAGS ── -->
+    <div class="step-panel" id="step4">
+      <div class="tag-quota-bar">
+        <span class="tag-quota-label">Tags selected</span>
+        <span class="tag-quota-count" id="tagCount">0 / 15</span>
+      </div>
+      <div class="quota-track">
+        <div class="quota-fill" id="quotaFill" style="width:0%"></div>
+      </div>
+
+      <div class="tag-cloud" id="tagCloud">
+        <div class="output-loading" id="tagLoading"><div class="spinner"></div> Building tag cloud...</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="fillTagsBtn" onclick="fillTags()" disabled>Fill Remaining Tags ✨</button>
+      </div>
+
+      <div class="section-divider" style="margin-top:20px">
+        <div class="section-divider-line"></div>
+        <div class="section-divider-label">Ready?</div>
+        <div class="section-divider-line"></div>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="saveBtn" onclick="saveToVault()" disabled>
+        Save to Vault 🗂️
+      </button>
+      <p class="text-mute mt-8" style="text-align:center">Saves title, description, and all tags to your Vault.</p>
+    </div>
+
+  </div><!-- /drawer-body -->
+</div><!-- /drawer -->
+
+<!-- TOAST -->
+<div class="toast" id="toast">✓ Saved to Vault</div>
+
+<!-- VAULT MODAL for read-only view triggered from sidebar -->
 
 <script>
-    let pet = null;
+/* ── STATE ── */
+const GROQ_KEY = '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';
+const GROQ_MODEL = 'llama3-8b-8192';
+const TAG_MAX = 15;
+const TAG_BATCH = 3;
 
-    const dinoElement = document.getElementById('dino');
-    const dinoRender = document.getElementById('dino-render');
-    const bubble = document.getElementById('speech-bubble');
-    const container = document.getElementById('game-container');
+let state = {
+  step: 1,
+  origTitle: '',
+  origDesc: '',
+  refinedTitle: '',
+  refinedDesc: '',
+  tags: [],
+  vault: []
+};
 
-    let chosenType = "T-Rex";
-    let isDraggingDino = false;
-    let isDraggingItem = false;
-    let activeItemElement = null;
-    let dragStartX, dragStartY;
-    let wanderTimeout;
-    let bubbleTimeout;
+/* ── SIDEBAR TOGGLE ── */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
 
-    // Premium Adopt Me Inspired 2D Character Vector Visual Framework
-    const sprites = {
-        'T-Rex': `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'>` +
-            `<path d='M35 75 Q 10 70 15 88 Q 30 88 45 82' fill='%234ade80'/>` +
-            `<ellipse cx='48' cy='105' rx='14' ry='10' fill='%2322c55e'/>` +
-            `<ellipse cx='76' cy='105' rx='14' ry='10' fill='%2322c55e'/>` +
-            `<rect x='40' y='50' width='48' height='50' rx='22' fill='%234ade80'/>` +
-            `<rect x='54' y='56' width='30' height='38' rx='14' fill='%23fef08a'/>` +
-            `<path d='M82 68 Q 92 70 90 75' stroke='%234ade80' stroke-width='7' stroke-linecap='round' fill='none'/>` +
-            `<rect x='52' y='20' width='44' height='40' rx='16' fill='%234ade80'/>` +
-            `<circle cx='78' cy='34' r='7' fill='%231e293b'/>` +
-            `<circle cx='80' cy='31' r='2.5' fill='white'/>` +
-            `<circle cx='70' cy='44' r='4' fill='%23f43f5e' opacity='0.4'/>` +
-            `</svg>")`,
+/* ── DRAWER ── */
+function openDrawer() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerBackdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
 
-        'Brachiosaurus': `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'>` +
-            `<path d='M35 85 Q 10 82 18 94' stroke='%2338bdf8' stroke-width='14' stroke-linecap='round' fill='none'/>` +
-            `<ellipse cx='46' cy='106' rx='14' ry='10' fill='%230284c7'/>` +
-            `<ellipse cx='78' cy='106' rx='14' ry='10' fill='%230284c7'/>` +
-            `<rect x='36' y='65' width='54' height='42' rx='20' fill='%2338bdf8'/>` +
-            `<circle cx='48' cy='76' r='4' fill='%230284c7' opacity='0.3'/>` +
-            `<circle cx='58' cy='73' r='5' fill='%230284c7' opacity='0.3'/>` +
-            `<path d='M76 80 L 76 36 Q 76 20 88 22' stroke='%2338bdf8' stroke-width='22' stroke-linecap='round' fill='none'/>` +
-            `<circle cx='86' cy='24' r='12' fill='%2338bdf8'/>` +
-            `<circle cx='88' cy='22' r='3.5' fill='%231e293b'/>` +
-            `<circle cx='89' cy='20' r='1.2' fill='white'/>` +
-            `</svg>")`,
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerBackdrop').classList.remove('open');
+  document.body.style.overflow = '';
+}
 
-        'Triceratops': `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'>` +
-            `<path d='M35 80 Q 15 75 22 90' stroke='%23fb923c' stroke-width='10' stroke-linecap='round' fill='none'/>` +
-            `<ellipse cx='48' cy='105' rx='13' ry='9' fill='%23ea580c'/>` +
-            `<ellipse cx='76' cy='105' rx='13' ry='9' fill='%23ea580c'/>` +
-            `<rect x='38' y='60' width='52' height='44' rx='18' fill='%23fb923c'/>` +
-            `<circle cx='82' cy='52' r='26' fill='%23ea580c'/>` +
-            `<circle cx='82' cy='40' r='3' fill='%23ffedd5'/>` +
-            `<circle cx='94' cy='46' r='3' fill='%23ffedd5'/>` +
-            `<circle cx='76' cy='65' r='18' fill='%23fb923c'/>` +
-            `<polygon points='86,60 98,58 88,68' fill='%23ffedd5'/>` +
-            `<polygon points='78,44 86,34 82,48' fill='%23ffedd5'/>` +
-            `<circle cx='72' cy='60' r='4.5' fill='%231e293b'/>` +
-            `<circle cx='73' cy='58' r='1.5' fill='white'/>` +
-            `</svg>")`
-    };
-
-    const dialogues = {
-        idle: {
-            'T-Rex': ["*Stomps cleanly*", "Look at my happy tail!", "Everything looks so clean here."],
-            'Brachiosaurus': ["*Chews happily*", "The fields are lovely today.", "I love hanging out in the yard."],
-            'Triceratops': ["*Polishes horns*", "Ready for some fun!", "Let's explore around."]
-        },
-        holding: ["Wheee! I can fly!", "Put me down gently!"],
-        dropped: ["Safe landing!", "Let's track down those items!"],
-        items: {
-            '🌸': ["*Sniffs flower* Ah, smells so good!", "What a cute flower patch."],
-            '🔥': ["Ooh, super cozy and warm here.", "*Warms toes near the fire pit*"],
-            '🌳': ["*Rests under tree branches*", "Nice and peaceful shade."]
-        }
-    };
-
-    function selectType(type, element) {
-        chosenType = type;
-        document.querySelectorAll('.dino-choice').forEach(el => el.classList.remove('selected'));
-        element.classList.add('selected');
+/* ── STEP NAVIGATION ── */
+function goToStep(n) {
+  state.step = n;
+  // Panels
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById(`step${i}`).classList.toggle('active', i === n);
+  }
+  // Progress nodes
+  for (let i = 1; i <= 4; i++) {
+    const node = document.getElementById(`stepNode${i}`);
+    const circle = document.getElementById(`stepCircle${i}`);
+    node.className = 'step-node';
+    if (i < n) {
+      node.classList.add('done');
+      circle.textContent = '✓';
+    } else if (i === n) {
+      node.classList.add('active');
+      circle.textContent = i;
+    } else {
+      circle.textContent = i;
     }
+  }
+}
 
-    function startGame() {
-        pet = {
-            name: document.getElementById('dino-name-input').value.trim() || "Nugget",
-            type: chosenType,
-            age: "Baby",
-            placedItems: []
-        };
-        saveGame();
-        initGame();
+/* ── GROQ API ── */
+async function callGroq(messages, maxTokens = 600) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_KEY}`
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: maxTokens,
+      temperature: 0.75,
+      messages
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error?.message || 'Groq API error');
+  }
+  const data = await res.json();
+  return data.choices[0].message.content.trim();
+}
+
+/* ── STEP 1: ANALYZE & REFINE ── */
+async function runStep1() {
+  const title = document.getElementById('inputTitle').value.trim();
+  const desc = document.getElementById('inputDesc').value.trim();
+
+  if (!title || !desc) {
+    alert('Please fill in both the title and description before analyzing.');
+    return;
+  }
+
+  state.origTitle = title;
+  state.origDesc = desc;
+
+  // Transition to step 2
+  goToStep(2);
+  document.getElementById('frozenTitle').value = title;
+  document.getElementById('frozenDesc').value = desc;
+
+  // Reset output boxes
+  const tBox = document.getElementById('refinedTitleBox');
+  const dBox = document.getElementById('refinedDescBox');
+  tBox.innerHTML = '<div class="output-loading"><div class="spinner"></div> Generating...</div>';
+  tBox.contentEditable = 'false';
+  dBox.innerHTML = '<div class="output-loading"><div class="spinner"></div> Generating...</div>';
+  dBox.contentEditable = 'false';
+
+  document.getElementById('approveBtn').disabled = true;
+  document.getElementById('regenBtn').disabled = true;
+
+  try {
+    const prompt = [
+      {
+        role: 'system',
+        content: `You are a YouTube growth expert and copywriter. 
+Return ONLY valid JSON with two keys: "title" and "description". 
+No markdown, no explanation, no extra text — just raw JSON.
+The title should be hook-driven and optimised for click-through.
+The description should be keyword-rich, structured with a hook in the first two lines, and include a natural CTA at the end.`
+      },
+      {
+        role: 'user',
+        content: `Original title: ${title}\n\nOriginal description:\n${desc}\n\nRefine both for YouTube performance.`
+      }
+    ];
+
+    const raw = await callGroq(prompt, 700);
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    state.refinedTitle = parsed.title || title;
+    state.refinedDesc = parsed.description || desc;
+
+    tBox.textContent = state.refinedTitle;
+    tBox.contentEditable = 'true';
+    dBox.textContent = state.refinedDesc;
+    dBox.contentEditable = 'true';
+
+    document.getElementById('approveBtn').disabled = false;
+    document.getElementById('regenBtn').disabled = false;
+
+  } catch (e) {
+    tBox.innerHTML = `<span style="color:var(--danger);font-size:12px">Error: ${e.message}. Check your API key and try again.</span>`;
+    dBox.innerHTML = '';
+    document.getElementById('regenBtn').disabled = false;
+  }
+}
+
+async function regenRefinement() {
+  document.getElementById('approveBtn').disabled = true;
+  document.getElementById('regenBtn').disabled = true;
+
+  const tBox = document.getElementById('refinedTitleBox');
+  const dBox = document.getElementById('refinedDescBox');
+  tBox.innerHTML = '<div class="output-loading"><div class="spinner"></div> Regenerating...</div>';
+  tBox.contentEditable = 'false';
+  dBox.innerHTML = '<div class="output-loading"><div class="spinner"></div> Regenerating...</div>';
+  dBox.contentEditable = 'false';
+
+  try {
+    const prompt = [
+      {
+        role: 'system',
+        content: `You are a YouTube growth expert. Return ONLY valid JSON with "title" and "description" keys. No markdown. No explanation. Raw JSON only. Use different hooks and angles than before.`
+      },
+      {
+        role: 'user',
+        content: `Original title: ${state.origTitle}\n\nOriginal description:\n${state.origDesc}\n\nGenerate a fresh variation — different hook, different angle.`
+      }
+    ];
+
+    const raw = await callGroq(prompt, 700);
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    state.refinedTitle = parsed.title || state.origTitle;
+    state.refinedDesc = parsed.description || state.origDesc;
+
+    tBox.textContent = state.refinedTitle;
+    tBox.contentEditable = 'true';
+    dBox.textContent = state.refinedDesc;
+    dBox.contentEditable = 'true';
+
+    document.getElementById('approveBtn').disabled = false;
+    document.getElementById('regenBtn').disabled = false;
+
+  } catch (e) {
+    tBox.innerHTML = `<span style="color:var(--danger);font-size:12px">Error: ${e.message}</span>`;
+    document.getElementById('regenBtn').disabled = false;
+  }
+}
+
+function approveRefinement() {
+  // Capture any manual edits from contenteditable
+  const tBox = document.getElementById('refinedTitleBox');
+  const dBox = document.getElementById('refinedDescBox');
+  state.refinedTitle = tBox.textContent.trim() || state.refinedTitle;
+  state.refinedDesc = dBox.textContent.trim() || state.refinedDesc;
+  goToStep(3);
+}
+
+/* ── STEP 3: CONTEXT → TAGS ── */
+async function runStep3() {
+  const audience = document.getElementById('ctxAudience').value.trim();
+  const style = document.getElementById('ctxStyle').value.trim();
+  const tone = document.getElementById('ctxTone').value.trim();
+  const extra = document.getElementById('ctxExtra').value.trim();
+
+  state.tags = [];
+  goToStep(4);
+
+  document.getElementById('tagCloud').innerHTML = '<div class="output-loading"><div class="spinner"></div> Building tag cloud...</div>';
+  document.getElementById('fillTagsBtn').disabled = true;
+  document.getElementById('saveBtn').disabled = true;
+  updateTagQuota();
+
+  const contextStr = [
+    audience ? `Target audience: ${audience}` : '',
+    style ? `Video style: ${style}` : '',
+    tone ? `Tone: ${tone}` : '',
+    extra ? `Additional context: ${extra}` : ''
+  ].filter(Boolean).join('\n');
+
+  try {
+    const batch = await fetchTagBatch(TAG_BATCH, contextStr);
+    state.tags = batch;
+    renderTagCloud();
+    document.getElementById('saveBtn').disabled = state.tags.length === 0;
+    updateFillBtn();
+  } catch (e) {
+    document.getElementById('tagCloud').innerHTML = `<span style="color:var(--danger);font-size:12px">Error: ${e.message}</span>`;
+  }
+}
+
+async function fetchTagBatch(count, contextStr = '') {
+  const existing = state.tags.join(', ');
+  const prompt = [
+    {
+      role: 'system',
+      content: `You are a YouTube SEO expert. Return ONLY a JSON array of exactly ${count} short keyword tags (2–5 words each). No markdown, no explanation, no extra text. Just a raw JSON array of strings.`
+    },
+    {
+      role: 'user',
+      content: `Video title: ${state.refinedTitle}\nVideo description: ${state.refinedDesc}\n${contextStr ? contextStr : ''}\n${existing ? `Already have these tags (do not repeat): ${existing}` : ''}\n\nGenerate ${count} new unique YouTube tags.`
     }
+  ];
 
-    function initGame() {
-        if(!pet) return;
-        
-        document.getElementById('setup-screen').style.display = 'none';
-        dinoElement.style.display = 'block';
-        
-        // Populate Control Dock Data Live
-        document.getElementById('lbl-name').innerText = pet.name;
-        document.getElementById('lbl-meta').innerText = `(${pet.type} • ${pet.age})`;
-        
-        dinoRender.style.backgroundImage = sprites[pet.type];
-        
-        // Remove older nodes and re-render properly positioned layout assets
-        document.querySelectorAll('.placed-item').forEach(el => el.remove());
-        if(pet.placedItems) {
-            pet.placedItems.forEach((item, index) => renderItem(item.type, item.x, index));
-        }
+  const raw = await callGroq(prompt, 300);
+  const clean = raw.replace(/```json|```/g, '').trim();
+  const parsed = JSON.parse(clean);
+  return Array.isArray(parsed) ? parsed.slice(0, count) : [];
+}
 
-        startAI();
-    }
+async function fillTags() {
+  const remaining = TAG_MAX - state.tags.length;
+  if (remaining <= 0) return;
 
-    function spawnItem(itemType) {
-        if(!pet) return;
-        if(!pet.placedItems) pet.placedItems = [];
-        
-        let id = pet.placedItems.length;
-        let defaultX = Math.random() * 600 + 100;
-        
-        pet.placedItems.push({ type: itemType, x: defaultX });
-        renderItem(itemType, defaultX, id);
-        saveGame();
-    }
+  const toGen = Math.min(TAG_BATCH, remaining);
+  document.getElementById('fillTagsBtn').disabled = true;
+  document.getElementById('fillTagsBtn').textContent = 'Generating...';
 
-    function renderItem(type, x, id) {
-        let itemDiv = document.createElement('div');
-        itemDiv.className = 'placed-item';
-        itemDiv.dataset.id = id;
-        itemDiv.innerText = type;
-        itemDiv.style.left = x + 'px';
-        
-        itemDiv.addEventListener('mousedown', (e) => {
-            isDraggingItem = true;
-            activeItemElement = itemDiv;
-            itemDiv.classList.add('dragging-item');
-            dragStartX = e.clientX - itemDiv.offsetLeft;
-            e.stopPropagation();
-        });
+  try {
+    const batch = await fetchTagBatch(toGen);
+    state.tags = [...state.tags, ...batch].slice(0, TAG_MAX);
+    renderTagCloud();
+    updateFillBtn();
+    document.getElementById('saveBtn').disabled = false;
+  } catch (e) {
+    alert('Tag generation failed: ' + e.message);
+  } finally {
+    document.getElementById('fillTagsBtn').textContent = 'Fill Remaining Tags ✨';
+  }
+}
 
-        container.appendChild(itemDiv);
-    }
+function removeTag(idx) {
+  state.tags.splice(idx, 1);
+  renderTagCloud();
+  updateFillBtn();
+  document.getElementById('saveBtn').disabled = state.tags.length === 0;
+}
 
-    function walkToLocation(targetX, callback) {
-        if (isDraggingDino || !pet) return;
-        
-        dinoElement.className = 'walking';
-        dinoRender.style.transform = (targetX < dinoElement.offsetLeft) ? "scaleX(-1)" : "scaleX(1)";
+function renderTagCloud() {
+  const cloud = document.getElementById('tagCloud');
+  if (state.tags.length === 0) {
+    cloud.innerHTML = '<span style="color:var(--ink-mute);font-size:12px;">No tags yet.</span>';
+    updateTagQuota();
+    return;
+  }
+  cloud.innerHTML = state.tags.map((tag, i) =>
+    `<span class="tag-chip">${tag}<button class="tag-remove" onclick="removeTag(${i})">✕</button></span>`
+  ).join('');
+  updateTagQuota();
+}
 
-        let distance = Math.abs(targetX - dinoElement.offsetLeft);
-        let duration = Math.max(distance * 4, 400); 
-        
-        dinoElement.style.transition = `left ${duration}ms linear`;
-        dinoElement.style.left = targetX + 'px';
+function updateTagQuota() {
+  const count = state.tags.length;
+  const el = document.getElementById('tagCount');
+  const fill = document.getElementById('quotaFill');
+  el.textContent = `${count} / ${TAG_MAX}`;
+  el.className = 'tag-quota-count' + (count >= TAG_MAX ? ' full' : '');
+  const pct = Math.min((count / TAG_MAX) * 100, 100);
+  fill.style.width = pct + '%';
+  fill.className = 'quota-fill' + (count >= TAG_MAX ? ' full' : '');
+}
 
-        setTimeout(() => {
-            if (!isDraggingDino) {
-                dinoElement.className = 'idle';
-                if (callback) callback();
-            }
-        }, duration);
-    }
+function updateFillBtn() {
+  const btn = document.getElementById('fillTagsBtn');
+  const remaining = TAG_MAX - state.tags.length;
+  btn.disabled = remaining <= 0;
+  if (remaining <= 0) {
+    btn.textContent = 'Tag limit reached ✓';
+  } else {
+    btn.textContent = `Fill Remaining Tags ✨ (+${Math.min(TAG_BATCH, remaining)})`;
+  }
+}
 
-    function speak(text) {
-        bubble.innerText = text;
-        bubble.style.display = 'block';
-        updateBubblePosition();
-        clearTimeout(bubbleTimeout);
-        bubbleTimeout = setTimeout(() => { bubble.style.display = 'none'; }, 3500);
-    }
+/* ── SAVE TO VAULT ── */
+function saveToVault() {
+  const record = {
+    id: Date.now(),
+    origTitle: state.origTitle,
+    origDesc: state.origDesc,
+    refinedTitle: state.refinedTitle,
+    refinedDesc: state.refinedDesc,
+    tags: [...state.tags],
+    savedAt: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  };
 
-    function updateBubblePosition() {
-        bubble.style.left = (dinoElement.offsetLeft + 10) + 'px';
-        bubble.style.top = (dinoElement.offsetTop - 50) + 'px';
-    }
+  state.vault.unshift(record);
+  renderVaultList();
+  showVaultDetail(record);
 
-    function startAI() {
-        clearTimeout(wanderTimeout);
-        let decisionLoop = () => {
-            if (isDraggingDino || isDraggingItem || !pet) {
-                wanderTimeout = setTimeout(decisionLoop, 4000);
-                return;
-            }
+  // Reset drawer state for next use
+  resetDrawer();
+  closeDrawer();
+  showToast('Saved to Vault');
+}
 
-            let roll = Math.random();
-            if (roll < 0.5 && pet.placedItems && pet.placedItems.length > 0) {
-                let item = pet.placedItems[Math.floor(Math.random() * pet.placedItems.length)];
-                walkToLocation(item.x - 15, () => {
-                    let lines = dialogues.items[item.type];
-                    if(lines) speak(lines[Math.floor(Math.random() * lines.length)]);
-                });
-            } else if (roll < 0.85) {
-                walkToLocation(Math.random() * 730, () => {
-                    if(Math.random() > 0.6) {
-                        let pool = dialogues.idle[pet.type];
-                        speak(pool[Math.floor(Math.random() * pool.length)]);
-                    }
-                });
-            } else {
-                let pool = dialogues.idle[pet.type];
-                speak(pool[Math.floor(Math.random() * pool.length)]);
-            }
-            wanderTimeout = setTimeout(decisionLoop, Math.random() * 5000 + 4000);
-        };
-        wanderTimeout = setTimeout(decisionLoop, 2000);
-    }
+function resetDrawer() {
+  // Clear inputs
+  document.getElementById('inputTitle').value = '';
+  document.getElementById('inputDesc').value = '';
+  document.getElementById('ctxAudience').value = '';
+  document.getElementById('ctxStyle').value = '';
+  document.getElementById('ctxTone').value = '';
+  document.getElementById('ctxExtra').value = '';
+  state.tags = [];
+  goToStep(1);
+}
 
-    function saveGame() {
-        localStorage.setItem('cute_habitat_v3_save', JSON.stringify(pet));
-    }
+/* ── VAULT UI ── */
+function renderVaultList() {
+  const list = document.getElementById('vaultList');
+  const empty = document.getElementById('vaultEmpty');
 
-    function resetGame() {
-        localStorage.removeItem('cute_habitat_v3_save');
-        location.reload();
-    }
+  if (state.vault.length === 0) {
+    list.innerHTML = '';
+    list.appendChild(empty);
+    return;
+  }
 
-    // Global Event Handlers
-    dinoElement.addEventListener('mousedown', (e) => {
-        if(!pet) return;
-        isDraggingDino = true;
-        dinoElement.className = 'dragging';
-        dinoElement.style.transition = "none";
-        dragStartX = e.clientX - dinoElement.offsetLeft;
-        dragStartY = e.clientY - dinoElement.offsetTop;
-        speak(dialogues.holding[Math.floor(Math.random() * dialogues.holding.length)]);
-    });
+  list.innerHTML = state.vault.map((rec, i) =>
+    `<div class="vault-item" id="vaultItem${rec.id}" onclick="showVaultDetail(state.vault[${i}])">
+      <div class="vault-item-dot"></div>
+      <div class="vault-item-content">
+        <div class="vault-item-title">${escHtml(rec.refinedTitle)}</div>
+        <div class="vault-item-meta">${rec.tags.length} tags · ${rec.savedAt}</div>
+      </div>
+    </div>`
+  ).join('');
+}
 
-    document.addEventListener('mousemove', (e) => {
-        let rect = container.getBoundingClientRect();
-        
-        if (isDraggingDino) {
-            let newX = e.clientX - rect.left - dragStartX;
-            let newY = e.clientY - rect.top - dragStartY;
-            newX = Math.max(0, Math.min(newX, 765));
-            newY = Math.max(0, Math.min(newY, 320));
-            
-            dinoElement.style.left = newX + 'px';
-            dinoElement.style.top = newY + 'px';
-            updateBubblePosition();
-        }
-        
-        if (isDraggingItem && activeItemElement) {
-            let newX = e.clientX - rect.left - dragStartX;
-            newX = Math.max(10, Math.min(newX, 850));
-            activeItemElement.style.left = newX + 'px';
-            
-            let id = activeItemElement.dataset.id;
-            if(pet.placedItems && pet.placedItems[id]) {
-                pet.placedItems[id].x = newX;
-            }
-        }
-    });
+function showVaultDetail(rec) {
+  // Mark active
+  document.querySelectorAll('.vault-item').forEach(el => el.classList.remove('active'));
+  const item = document.getElementById(`vaultItem${rec.id}`);
+  if (item) item.classList.add('active');
 
-    document.addEventListener('mouseup', () => {
-        if (isDraggingDino) {
-            isDraggingDino = false;
-            dinoElement.className = 'idle';
-            dinoElement.style.transition = "top 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)";
-            dinoElement.style.top = "320px";
-            setTimeout(() => { speak(dialogues.dropped[Math.floor(Math.random() * dialogues.dropped.length)]); }, 400);
-            saveGame();
-        }
-        if (isDraggingItem) {
-            isDraggingItem = false;
-            if(activeItemElement) activeItemElement.classList.remove('dragging-item');
-            activeItemElement = null;
-            saveGame();
-        }
-    });
+  // Hide empty, show detail
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('vaultDetail').classList.add('visible');
 
-    window.onload = () => {
-        let data = localStorage.getItem('cute_habitat_v3_save');
-        if(data) {
-            pet = JSON.parse(data);
-            initGame();
-        } else {
-            document.getElementById('setup-screen').style.display = 'flex';
-        }
-    };
+  // Populate
+  document.getElementById('detailTitle').textContent = rec.refinedTitle;
+  document.getElementById('detailDate').textContent = rec.savedAt;
+  document.getElementById('detailOrigTitle').textContent = rec.origTitle;
+  document.getElementById('detailRefinedTitle').textContent = rec.refinedTitle;
+  document.getElementById('detailOrigDesc').textContent = rec.origDesc;
+  document.getElementById('detailRefinedDesc').textContent = rec.refinedDesc;
+  document.getElementById('detailTags').innerHTML = rec.tags.map(t =>
+    `<span class="tag-chip-ro">${escHtml(t)}</span>`
+  ).join('');
+}
+
+/* ── TOAST ── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = '✓ ' + msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ── UTILS ── */
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 </script>
-
 </body>
 </html>
